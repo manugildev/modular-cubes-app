@@ -30,18 +30,21 @@ public class SendActivateTask extends AsyncTask<String, Void, TreeMap<Integer, M
         this.modularCubes = new TreeMap<Integer, ModularCube>();
         this.client = new OkHttpClient();
         JSONObject activate1 = new JSONObject();
+        JSONObject bodyJson = new JSONObject();
+
         try {
             activate1.put("lIP", cube.getIp());
             activate1.put("dId", cube.getDeviceId());
             activate1.put("a", cube.isActivated() ? 1 : 0);
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.put(activate1);
+            bodyJson.put("value", '"' + jsonArray.toString() + '"');
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(activate1);
         //"[{"lIP":"192.168.4.2","a":1,"dId":1722370},{"lIP":"192.168.43.4","a":1,"dId":15680347}]"
-        bodyStr = '"' + jsonArray.toString() + '"';
+        bodyStr = bodyJson.toString();
     }
 
     @Override
@@ -51,33 +54,29 @@ public class SendActivateTask extends AsyncTask<String, Void, TreeMap<Integer, M
 
     @Override
     protected TreeMap<Integer, ModularCube> doInBackground(String... params) {
-        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(JSON, bodyStr);
-        String response = "";
-        String url = "https://io.adafruit.com/api/v2/gikdew/feeds/data";
-        String aioKey = "dbd315bf60794acf9a8c51bc2e19c371"; //TODO: This to file
-        Request request = new Request.Builder().url(url).put(body)
-                                               .addHeader("x-aio-key", aioKey).build();
+        String response = "Retry later";
+        while (response.contains("Retry later")) {
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+            RequestBody body = RequestBody.create(JSON, bodyStr);
 
-        try {
-            Response r = client.newCall(request).execute();
-            response = r.body().string();
-        } catch (IOException e) {
-            e.printStackTrace();
+            String url = "https://io.adafruit.com/api/v2/gikdew/feeds/activate/data";
+            String aioKey = "dbd315bf60794acf9a8c51bc2e19c371"; //TODO: This to file
+            Request request = new Request.Builder().url(url).post(body)
+                                                   .addHeader("x-aio-key", aioKey).build();
+
+            try {
+                Response r = client.newCall(request).execute();
+                response = r.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println(response);
         }
-        System.out.println(response);
-
         return modularCubes;
     }
 
     @Override
     protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
-        fragment.refreshData(modularCubes);
-        try {
-            Thread.sleep(1000);
-            new FetchDataTask(fragment).execute();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
     }
 }

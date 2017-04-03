@@ -5,7 +5,11 @@ import android.os.AsyncTask;
 import com.manugildev.modularcubes.MainActivityFragment;
 import com.manugildev.modularcubes.data.models.ModularCube;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.TreeMap;
 
 import okhttp3.OkHttpClient;
@@ -43,17 +47,57 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
             e.printStackTrace();
         }
         System.out.println(response);
-        parseJson();
+        parseJson(response);
 
         return modularCubes;
+    }
+
+    private void parseJson(String response) {
+        if (!response.contains("Retry later"))
+            try {
+                JSONObject jsonObject = new JSONObject(response);
+                String lastValueStr = jsonObject.getString("last_value");
+                lastValueStr = lastValueStr.replace('\"', '"')
+                                           .substring(1, lastValueStr.length() - 1);
+                JSONObject lastValueJson = new JSONObject(lastValueStr);
+                parseCubes(lastValueJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        else
+            try {
+                Thread.sleep(5000);
+                new FetchDataTask(fragment).execute();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+    }
+
+    private void parseCubes(JSONObject lastValueJson) throws JSONException {
+        Iterator<String> iter = lastValueJson.keys();
+        while (iter.hasNext()) {
+            String key = iter.next();
+            JSONObject cubeJson = lastValueJson.getJSONObject(key);
+            ModularCube c = new ModularCube();
+            c.setIp(key);
+            c.setDeviceId(cubeJson.getInt("dId"));
+            c.setCurrentOrientation(cubeJson.getInt("cO"));
+            c.setActivated(cubeJson.getInt("a") == 1);
+            modularCubes.put(c.getDeviceId(), c);
+            if (cubeJson.has("c")) {
+                parseCubes(cubeJson.getJSONObject("c"));
+            }
+
+        }
     }
 
     @Override
     protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
         fragment.refreshData(modularCubes);
         try {
-            Thread.sleep(1000);
+
             new FetchDataTask(fragment).execute();
+            Thread.sleep(200);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

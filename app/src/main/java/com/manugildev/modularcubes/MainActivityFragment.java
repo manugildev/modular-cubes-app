@@ -12,15 +12,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.network.FetchDataTask;
 import com.manugildev.modularcubes.network.SendActivateTask;
+import com.manugildev.modularcubes.ui.FlatColors;
 
 import java.util.Map;
 import java.util.TreeMap;
+
+import static com.manugildev.modularcubes.R.drawable.activate_off;
+import static com.manugildev.modularcubes.R.drawable.activate_on;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -63,17 +68,20 @@ public class MainActivityFragment extends Fragment {
             //TODO if size is less, remove;
             if (data == null || !data.containsKey(key)) {
                 // TODO: Move this to other function
-                View view = LayoutInflater.from(getActivity())
+                View view = LayoutInflater.from(fragment.getActivity())
                                           .inflate(R.layout.view_modular_cube, gridLayout, false);
                 view.setId(cube.getDeviceId());
-                Button b = (Button) view.findViewById(R.id.button);
-                b.setOnClickListener(new View.OnClickListener() {
+                TextView tV = (TextView) view.findViewById(R.id.textView);
+                view.setBackgroundColor(FlatColors.allColors.get(data.size()));
+                tV.setText(String.valueOf(cube.getCurrentOrientation()));
+                view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        if (cube.isActivated()) cube.setActivated(false);
+                        else cube.setActivated(true);
                         new SendActivateTask(fragment, cube).execute();
                     }
                 });
-                b.setText(cube.getCurrentOrientation());
                 cube.setActivity(this);
                 cube.setView(view);
                 gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
@@ -84,11 +92,6 @@ public class MainActivityFragment extends Fragment {
                     refreshGridLayout();
             }
         }
-    }
-
-    public void changeTextInButton(int id, String text) {
-        if ((getActivity().findViewById(id)) != null)
-            ((Button) getActivity().findViewById(id).findViewById(R.id.button)).setText(text);
     }
 
     // TODO: Try to simplify this as much as possible and no hardcode it
@@ -128,5 +131,23 @@ public class MainActivityFragment extends Fragment {
         }
 
         gridLayout.setLayoutParams(params);
+    }
+
+    public void changeTextInButton(int id, String text) {
+        if (getActivity() != null && getActivity().findViewById(id) != null)
+            ((TextView) getActivity().findViewById(id).findViewById(R.id.textView)).setText(text);
+    }
+
+    public void changeActivatedLight(int id, Boolean activated) {
+        if (getActivity() != null && getActivity().findViewById(id) != null) {
+            ImageView light = (ImageView) getActivity().findViewById(id)
+                                                       .findViewById(R.id.imageView);
+            if (activated) {
+                light.setImageResource(activate_on);
+            } else {
+                light.setImageResource(activate_off);
+            }
+        }
+
     }
 }

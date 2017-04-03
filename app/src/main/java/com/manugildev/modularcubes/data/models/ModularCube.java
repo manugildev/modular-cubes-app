@@ -17,7 +17,6 @@ public class ModularCube {
 
 
     public boolean updateCube(ModularCube cube) {
-        setActivity(cube.activity);
         setIp(cube.getIp());
         setDeviceId(cube.getDeviceId());
         setCurrentOrientation(cube.getCurrentOrientation());
@@ -48,6 +47,9 @@ public class ModularCube {
     }
 
     public void setActivated(Boolean activated) {
+        if (this.activated != activated && activity != null) {
+            activity.changeActivatedLight(getDeviceId(), activated);
+        }
         this.activated = activated;
     }
 
@@ -84,6 +86,5 @@ public class ModularCube {
                 ", activated=" + activated +
                 '}';
     }
-
 
 }
