@@ -42,7 +42,7 @@ public class ModularCube {
 
     public void setCurrentOrientation(int currentOrientation) {
         if (this.currentOrientation != currentOrientation && activity != null)
-            activity.changeTextInButton(getDeviceId(), String.valueOf(currentOrientation));
+            activity.changeTextInButton(this);
         this.currentOrientation = currentOrientation;
     }
 

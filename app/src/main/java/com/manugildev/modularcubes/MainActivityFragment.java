@@ -3,6 +3,7 @@ package com.manugildev.modularcubes;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -22,6 +23,8 @@ import com.manugildev.modularcubes.network.SendActivateTask;
 import com.manugildev.modularcubes.ui.FlatColors;
 
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeMap;
 
 import static com.manugildev.modularcubes.R.drawable.activate_off;
@@ -57,24 +60,50 @@ public class MainActivityFragment extends Fragment {
         gridLayout = (GridLayout) getActivity().findViewById(R.id.gridlayout);
 
         gridLayout.removeAllViews();
-        new FetchDataTask(this).execute();
+        callAsynchronousTask();
+    }
 
+    public void callAsynchronousTask() {
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask doAsynchronousTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        try {
+                            FetchDataTask fetchDataTask = new FetchDataTask(fragment);
+                            fetchDataTask.execute();
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(doAsynchronousTask, 0, 5000); //execute in every 50000 ms
     }
 
     public void refreshData(TreeMap<Integer, ModularCube> modularCubes) {
+        if (modularCubes.size() < data.size()) {
+            data.clear();
+            gridLayout.removeAllViews();
+        }
         for (Map.Entry<Integer, ModularCube> entry : modularCubes.entrySet()) {
             Integer key = entry.getKey();
             final ModularCube cube = entry.getValue();
             //TODO if size is less, remove;
-            if (data == null || !data.containsKey(key)) {
+            if ((data == null || !data.containsKey(key)) && fragment.getActivity() != null) {
                 // TODO: Move this to other function
                 View view = LayoutInflater.from(fragment.getActivity())
                                           .inflate(R.layout.view_modular_cube, gridLayout, false);
                 view.setId(cube.getDeviceId());
                 TextView tV = (TextView) view.findViewById(R.id.textView);
+                TextView tV_id = (TextView) view.findViewById(R.id.textView_id);
                 view.setBackgroundColor(FlatColors.allColors.get(data.size()));
                 tV.setText(String.valueOf(cube.getCurrentOrientation()));
-                view.setOnClickListener(new View.OnClickListener() {
+                tV_id.setText(String.valueOf(cube.getDeviceId()));
+                tV.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         if (cube.isActivated()) cube.setActivated(false);
@@ -133,9 +162,15 @@ public class MainActivityFragment extends Fragment {
         gridLayout.setLayoutParams(params);
     }
 
-    public void changeTextInButton(int id, String text) {
-        if (getActivity() != null && getActivity().findViewById(id) != null)
-            ((TextView) getActivity().findViewById(id).findViewById(R.id.textView)).setText(text);
+    public void changeTextInButton(ModularCube cube) {
+        int id = cube.getDeviceId();
+        if (getActivity() != null && getActivity().findViewById(id) != null) {
+            TextView tV = (TextView) getActivity().findViewById(id).findViewById(R.id.textView);
+            TextView tV_id = (TextView) getActivity().findViewById(id)
+                                                     .findViewById(R.id.textView_id);
+            tV.setText(String.valueOf(cube.getCurrentOrientation()));
+            tV_id.setText(String.valueOf(cube.getDeviceId()));
+        }
     }
 
     public void changeActivatedLight(int id, Boolean activated) {

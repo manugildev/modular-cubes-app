@@ -80,7 +80,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
             ModularCube c = new ModularCube();
             c.setIp(key);
-            c.setDeviceId(cubeJson.getInt("dId"));
+            c.setDeviceId(Integer.valueOf(key));
             c.setCurrentOrientation(cubeJson.getInt("cO"));
             c.setActivated(cubeJson.getInt("a") == 1);
             modularCubes.put(c.getDeviceId(), c);
@@ -94,12 +94,5 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
     @Override
     protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
         fragment.refreshData(modularCubes);
-        try {
-
-            new FetchDataTask(fragment).execute();
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }

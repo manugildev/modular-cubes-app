@@ -34,7 +34,6 @@ public class SendActivateTask extends AsyncTask<String, Void, TreeMap<Integer, M
 
         try {
             activate1.put("lIP", cube.getIp());
-            activate1.put("dId", cube.getDeviceId());
             activate1.put("a", cube.isActivated() ? 1 : 0);
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(activate1);
@@ -77,6 +76,6 @@ public class SendActivateTask extends AsyncTask<String, Void, TreeMap<Integer, M
 
     @Override
     protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
-
+        // new FetchDataTask(fragment).execute();
     }
 }
