@@ -1,6 +1,7 @@
 package com.manugildev.modularcubes.network;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.manugildev.modularcubes.MainActivityFragment;
 import com.manugildev.modularcubes.data.models.ModularCube;
@@ -24,7 +25,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
 
     public FetchDataTask(MainActivityFragment fragment) {
         this.fragment = fragment;
-        this.modularCubes = new TreeMap<Integer, ModularCube>();
+        this.modularCubes = new TreeMap<>();
         this.client = new OkHttpClient();
     }
 
@@ -46,7 +47,6 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(response);
         parseJson(response);
 
         return modularCubes;
@@ -57,8 +57,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
             try {
                 JSONObject jsonObject = new JSONObject(response);
                 String lastValueStr = jsonObject.getString("last_value");
-                lastValueStr = lastValueStr.replace('\"', '"')
-                                           .substring(1, lastValueStr.length() - 1);
+                lastValueStr = lastValueStr.replace('\"', '"').substring(1, lastValueStr.length() - 1);
                 JSONObject lastValueJson = new JSONObject(lastValueStr);
                 parseCubes(lastValueJson);
             } catch (JSONException e) {
@@ -84,6 +83,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
             c.setCurrentOrientation(cubeJson.getInt("cO"));
             c.setActivated(cubeJson.getInt("a") == 1);
             modularCubes.put(c.getDeviceId(), c);
+            Log.d("Cube", c.toString());
             if (cubeJson.has("c")) {
                 parseCubes(cubeJson.getJSONObject("c"));
             }
@@ -94,5 +94,6 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
     @Override
     protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
         fragment.refreshData(modularCubes);
+        fragment.callAsynchronousTask(5000);
     }
 }

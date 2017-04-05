@@ -47,7 +47,7 @@ public class ModularCube {
     }
 
     public void setActivated(Boolean activated) {
-        if (this.activated != activated && activity != null) {
+        if (activity != null) {
             activity.changeActivatedLight(getDeviceId(), activated);
         }
         this.activated = activated;
