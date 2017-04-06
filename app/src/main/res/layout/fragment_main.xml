@@ -27,6 +27,7 @@
         android:layout_below="@id/gridlayout"/>
 
     <ProgressBar
+        android:visibility="gone"
         android:id="@+id/progressBarTimer"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
@@ -36,6 +37,5 @@
         android:scrollbarSize="50dip"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"/>
-
 
 </RelativeLayout>

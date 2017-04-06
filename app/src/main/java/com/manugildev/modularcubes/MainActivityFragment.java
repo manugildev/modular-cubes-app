@@ -1,13 +1,16 @@
 package com.manugildev.modularcubes;
 
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,11 +20,13 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Switch;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
+import android.widget.ViewSwitcher;
 
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.network.FetchDataTask;
-import com.manugildev.modularcubes.network.SendActivateTask;
+import com.manugildev.modularcubes.network.MQTTHandler;
 import com.manugildev.modularcubes.ui.FlatColors;
 
 import java.util.Map;
@@ -31,10 +36,10 @@ import static com.manugildev.modularcubes.R.drawable.activate_off;
 import static com.manugildev.modularcubes.R.drawable.activate_on;
 import static com.manugildev.modularcubes.R.id.gridlayout;
 
+public class MainActivityFragment extends Fragment implements CompoundButton.OnCheckedChangeListener {
 
-// TODO: Connection lost
-public class MainActivityFragment extends Fragment
-        implements CompoundButton.OnCheckedChangeListener {
+    private static final String ACTIVATE_TOPIC = "activate";
+    public static final String DATA_TOPIC = "data";
 
     TreeMap<Integer, ModularCube> mData;
     GridLayout gridLayout;
@@ -44,8 +49,10 @@ public class MainActivityFragment extends Fragment
     FetchDataTask fetchDataTask;
     Switch switchButton;
 
+    MQTTHandler mqttHandler;
+
     public MainActivityFragment() {
-        fragment = this;
+        this.fragment = this;
     }
 
     @Override
@@ -62,10 +69,11 @@ public class MainActivityFragment extends Fragment
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mData = new TreeMap<Integer, ModularCube>();
+        mqttHandler = new MQTTHandler(this);
+        mqttHandler.connect(DATA_TOPIC);
         gridLayout = (GridLayout) getActivity().findViewById(gridlayout);
-
         gridLayout.removeAllViews();
-        callAsynchronousTask(0);
+        //callAsynchronousTask(0);
     }
 
     public void callAsynchronousTask(int milliseconds) {
@@ -92,6 +100,7 @@ public class MainActivityFragment extends Fragment
             mData.clear();
             gridLayout.removeAllViews();
         }
+        Log.d("Calling", "refreshDataOutside()");
         for (Map.Entry<Integer, ModularCube> entry : modularCubes.entrySet()) {
             Integer key = entry.getKey();
             ModularCube cube = entry.getValue();
@@ -101,6 +110,7 @@ public class MainActivityFragment extends Fragment
                 mData.put(key, cube);
                 gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
                 refreshGridLayout();
+                Log.d("Calling", "refreshData()");
 
             } else {
                 if (mData.get(cube.getDeviceId()).updateCube(cube))
@@ -111,26 +121,38 @@ public class MainActivityFragment extends Fragment
 
     private void createViewForCube(final ModularCube cube) {
         View viewCube = LayoutInflater.from(fragment.getActivity()).inflate(R.layout.view_modular_cube, gridLayout, false);
-        TextView textViewOrientation = (TextView) viewCube.findViewById(R.id.textViewOrientation);
+        TextSwitcher textSwitcherOrientation = (TextSwitcher) viewCube.findViewById(R.id.textSwitcherOrientation);
+        textSwitcherOrientation.setFactory(new ViewSwitcher.ViewFactory() {
+            @Override
+            public View makeView() {
+                TextView myText = new TextView(getActivity());
+                myText.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL);
+                myText.setTextSize(50);
+                myText.setTextColor(Color.WHITE);
+                return myText;
+            }
+        });
         TextView textViewID = (TextView) viewCube.findViewById(R.id.textViewID);
         viewCube.setId(cube.getDeviceId());
         viewCube.setBackgroundColor(FlatColors.allColors.get(mData.size()));
-        textViewOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
+        textSwitcherOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
         textViewID.setText(String.valueOf(cube.getDeviceId()));
-        textViewOrientation.setOnClickListener(new View.OnClickListener() {
+        textSwitcherOrientation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new SendActivateTask(fragment, cube).execute();
+                mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
             }
         });
         ImageView imageViewLight = (ImageView) viewCube.findViewById(R.id.imageViewLight);
         if (cube.isActivated()) imageViewLight.setImageResource(activate_on);
         else imageViewLight.setImageResource(activate_off);
         cube.setView(viewCube);
+
+        Log.d("Calling", "createViewForCube()");
     }
 
-    // TODO: Try to simplify this as much as possible and no hardcode it
     public void refreshGridLayout() {
+        Log.d("Calling", "refresGridLayout()");
         Display display = getActivity().getWindowManager().getDefaultDisplay();
         Point size = new Point();
         Resources r = getResources();
@@ -183,12 +205,15 @@ public class MainActivityFragment extends Fragment
         v.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay((int) (Math.random() * 200 + 30));
     }
 
-    public void changeTextInButton(ModularCube cube) {
+    public void changeTextInButton(final ModularCube cube) {
         int id = cube.getDeviceId();
         if (getActivity() != null && getActivity().findViewById(id) != null) {
-            TextView tV = (TextView) getActivity().findViewById(id).findViewById(R.id.textViewOrientation);
+            TextSwitcher textSwitcherOrientation = (TextSwitcher) getActivity().findViewById(id).findViewById(R.id.textSwitcherOrientation);
             TextView tV_id = (TextView) getActivity().findViewById(id).findViewById(R.id.textViewID);
-            tV.setText(String.valueOf(cube.getCurrentOrientation()));
+            //int previousNumber = Integer.valueOf(((TextView)textSwitcherOrientation.getCurrentView()).getText().toString());
+            textSwitcherOrientation.setInAnimation(getActivity(), android.R.anim.slide_in_left);
+            textSwitcherOrientation.setOutAnimation(getActivity(), android.R.anim.slide_out_right);
+            textSwitcherOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
             tV_id.setText(String.valueOf(cube.getDeviceId()));
         }
     }
@@ -202,8 +227,6 @@ public class MainActivityFragment extends Fragment
                 light.setImageResource(activate_off);
             }
         }
-
-
     }
 
     @Override
@@ -212,15 +235,21 @@ public class MainActivityFragment extends Fragment
             for (Map.Entry<Integer, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(false);
-                new SendActivateTask(fragment, cube).execute();
+                mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
             }
         } else {
             for (Map.Entry<Integer, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(true);
-                new SendActivateTask(fragment, cube).execute();
+                mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
             }
         }
 
+    }
+
+    @Override
+    public void onDestroy() {
+        mqttHandler.destroy();
+        super.onDestroy();
     }
 }

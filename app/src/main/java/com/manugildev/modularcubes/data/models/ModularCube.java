@@ -13,7 +13,8 @@ public class ModularCube {
     private View view;
     private MainActivityFragment activity;
 
-    public ModularCube() { }
+    public ModularCube() {
+    }
 
 
     public boolean updateCube(ModularCube cube) {
@@ -41,8 +42,10 @@ public class ModularCube {
     }
 
     public void setCurrentOrientation(int currentOrientation) {
-        if (this.currentOrientation != currentOrientation && activity != null)
+        if (this.currentOrientation != currentOrientation && activity != null) {
+            this.currentOrientation = currentOrientation;
             activity.changeTextInButton(this);
+        }
         this.currentOrientation = currentOrientation;
     }
 
