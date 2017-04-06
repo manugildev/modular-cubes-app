@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -109,6 +110,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 createViewForCube(cube);
                 mData.put(key, cube);
                 gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
+                animateCubeOnCreate(cube.getView());
                 refreshGridLayout();
                 Log.d("Calling", "refreshData()");
 
@@ -133,11 +135,12 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             }
         });
         TextView textViewID = (TextView) viewCube.findViewById(R.id.textViewID);
+        FrameLayout touchFrameLayout = (FrameLayout) viewCube.findViewById(R.id.touchFrameLayaout);
         viewCube.setId(cube.getDeviceId());
         viewCube.setBackgroundColor(FlatColors.allColors.get(mData.size()));
         textSwitcherOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
         textViewID.setText(String.valueOf(cube.getDeviceId()));
-        textSwitcherOrientation.setOnClickListener(new View.OnClickListener() {
+        touchFrameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
@@ -193,8 +196,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             LayoutParams l = v.getLayoutParams();
             l.height = cubeSize;
             l.width = cubeSize;
-            animateCubeOnCreate(v);
-
         }
         switchButton.animate().alpha(1).setDuration(300).setStartDelay(500);
     }

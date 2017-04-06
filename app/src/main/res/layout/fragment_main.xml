@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.manugildev.modularcubes.MainActivityFragment"
-    tools:showIn="@layout/activity_main">
+    tools:showIn="@layout/activity_main"
+    >
 
     <GridLayout
         android:id="@+id/gridlayout"
@@ -19,23 +20,25 @@
         android:rowCount="3">
 
     </GridLayout>
+
     <Switch
         android:id="@+id/switchButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/gridlayout"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/gridlayout"/>
+        android:visibility="gone"/>
 
     <ProgressBar
-        android:visibility="gone"
         android:id="@+id/progressBarTimer"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="5dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="-1dp"
         android:max="290"
         android:scrollbarSize="50dip"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"/>
+        android:visibility="gone"/>
 
 </RelativeLayout>
