@@ -184,15 +184,15 @@ public class MQTTHandler implements MqttCallback {
     //================================================================================
     private String createJsonActivateMessage(ModularCube cube) throws JSONException {
         JSONObject activate1 = new JSONObject();
-        activate1.put("lIP", cube.getIp());
+        activate1.put("lIP", cube.getDeviceId());
         activate1.put("a", cube.isActivated() ? 0 : 1);
         JSONArray jsonArray = new JSONArray();
         jsonArray.put(activate1);
         return jsonArray.toString();
     }
 
-    private TreeMap<Integer, ModularCube> parseJson(String response) {
-        TreeMap<Integer, ModularCube> modularCubes = new TreeMap<>();
+    private TreeMap<Long, ModularCube> parseJson(String response) {
+        TreeMap<Long, ModularCube> modularCubes = new TreeMap<>();
         try {
             JSONObject responseJson = new JSONObject(response);
             return parseCubes(modularCubes, responseJson);
@@ -202,15 +202,16 @@ public class MQTTHandler implements MqttCallback {
         return modularCubes;
     }
 
-    private TreeMap<Integer, ModularCube> parseCubes(TreeMap<Integer, ModularCube> modularCubes, JSONObject lastValueJson) throws JSONException {
+    private TreeMap<Long, ModularCube> parseCubes(TreeMap<Long, ModularCube> modularCubes, JSONObject lastValueJson) throws JSONException {
 
         Iterator<String> iter = lastValueJson.keys();
+
         while (iter.hasNext()) {
             String key = iter.next();
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
             ModularCube c = new ModularCube();
             c.setIp(key);
-            c.setDeviceId(Integer.valueOf(key));
+            c.setDeviceId(Long.valueOf(key));
             c.setCurrentOrientation(cubeJson.getInt("cO"));
             c.setActivated(cubeJson.getInt("a") == 1);
             modularCubes.put(c.getDeviceId(), c);

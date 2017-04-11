@@ -42,7 +42,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     private static final String ACTIVATE_TOPIC = "activate";
     public static final String DATA_TOPIC = "data";
 
-    TreeMap<Integer, ModularCube> mData;
+    TreeMap<Long, ModularCube> mData;
     GridLayout gridLayout;
     final MainActivityFragment fragment;
     ProgressBar progressBar;
@@ -69,7 +69,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mData = new TreeMap<Integer, ModularCube>();
+        mData = new TreeMap<Long, ModularCube>();
         mqttHandler = new MQTTHandler(this);
         mqttHandler.connect(DATA_TOPIC);
         gridLayout = (GridLayout) getActivity().findViewById(gridlayout);
@@ -96,15 +96,16 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mCountDownTimer.start();
     }
 
-    public void refreshData(TreeMap<Integer, ModularCube> modularCubes) {
+    public void refreshData(TreeMap<Long, ModularCube> modularCubes) {
         if (modularCubes.size() < mData.size()) {
             mData.clear();
             gridLayout.removeAllViews();
         }
         Log.d("Calling", "refreshDataOutside()");
-        for (Map.Entry<Integer, ModularCube> entry : modularCubes.entrySet()) {
-            Integer key = entry.getKey();
+        for (Map.Entry<Long, ModularCube> entry : modularCubes.entrySet()) {
+            Long key = entry.getKey();
             ModularCube cube = entry.getValue();
+            Log.d("BreakPointCube", cube.toString());
             if ((mData == null || !mData.containsKey(key)) && fragment.getActivity() != null) {
                 cube.setActivity(this);
                 createViewForCube(cube);
@@ -136,7 +137,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         });
         TextView textViewID = (TextView) viewCube.findViewById(R.id.textViewID);
         FrameLayout touchFrameLayout = (FrameLayout) viewCube.findViewById(R.id.touchFrameLayaout);
-        viewCube.setId(cube.getDeviceId());
+        viewCube.setId(View.generateViewId());
+        cube.setViewId(viewCube.getId());
         viewCube.setBackgroundColor(FlatColors.allColors.get(mData.size()));
         textSwitcherOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
         textViewID.setText(String.valueOf(cube.getDeviceId()));
@@ -207,7 +209,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     public void changeTextInButton(final ModularCube cube) {
-        int id = cube.getDeviceId();
+        int id = cube.getViewId();
         if (getActivity() != null && getActivity().findViewById(id) != null) {
             TextSwitcher textSwitcherOrientation = (TextSwitcher) getActivity().findViewById(id).findViewById(R.id.textSwitcherOrientation);
             TextView tV_id = (TextView) getActivity().findViewById(id).findViewById(R.id.textViewID);
@@ -219,9 +221,9 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         }
     }
 
-    public void changeActivatedLight(int id, Boolean activated) {
-        if (getActivity() != null && getActivity().findViewById(id) != null) {
-            ImageView light = (ImageView) getActivity().findViewById(id).findViewById(R.id.imageViewLight);
+    public void changeActivatedLight(long id, Boolean activated) {
+        if (getActivity() != null && getActivity().findViewById((int) id) != null) {
+            ImageView light = (ImageView) getActivity().findViewById((int) id).findViewById(R.id.imageViewLight);
             if (activated) {
                 light.setImageResource(activate_on);
             } else {
@@ -233,13 +235,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
         if (isChecked) {
-            for (Map.Entry<Integer, ModularCube> entry : mData.entrySet()) {
+            for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(false);
                 mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
             }
         } else {
-            for (Map.Entry<Integer, ModularCube> entry : mData.entrySet()) {
+            for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(true);
                 mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
@@ -248,9 +250,4 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     }
 
-    @Override
-    public void onDestroy() {
-        mqttHandler.destroy();
-        super.onDestroy();
-    }
 }

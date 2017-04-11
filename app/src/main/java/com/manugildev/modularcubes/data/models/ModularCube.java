@@ -7,11 +7,12 @@ import com.manugildev.modularcubes.MainActivityFragment;
 public class ModularCube {
 
     private String ip;
-    private int deviceId;
+    private long deviceId;
     private int currentOrientation;
     private Boolean activated;
     private View view;
     private MainActivityFragment activity;
+    private int viewId;
 
     public ModularCube() {
     }
@@ -37,7 +38,7 @@ public class ModularCube {
         this.ip = ip;
     }
 
-    public void setDeviceId(int deviceId) {
+    public void setDeviceId(Long deviceId) {
         this.deviceId = deviceId;
     }
 
@@ -51,7 +52,7 @@ public class ModularCube {
 
     public void setActivated(Boolean activated) {
         if (activity != null) {
-            activity.changeActivatedLight(getDeviceId(), activated);
+            activity.changeActivatedLight(getViewId(), activated);
         }
         this.activated = activated;
     }
@@ -60,7 +61,7 @@ public class ModularCube {
         return ip;
     }
 
-    public int getDeviceId() {
+    public long getDeviceId() {
         return deviceId;
     }
 
@@ -90,4 +91,10 @@ public class ModularCube {
                 '}';
     }
 
+    public void setViewId(int viewId) {
+        this.viewId = viewId;
+    }
+    public int getViewId() {
+        return this.viewId;
+    }
 }

@@ -23,10 +23,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class SendActivateTask extends AsyncTask<String, Integer, TreeMap<Integer, ModularCube>> {
+public class SendActivateTask extends AsyncTask<String, Integer, TreeMap<Long, ModularCube>> {
 
     MainActivityFragment fragment;
-    TreeMap<Integer, ModularCube> modularCubes;
+    TreeMap<Long, ModularCube> modularCubes;
     OkHttpClient client;
     String bodyStr;
     ProgressBar progressBar;
@@ -62,7 +62,7 @@ public class SendActivateTask extends AsyncTask<String, Integer, TreeMap<Integer
     }
 
     @Override
-    protected TreeMap<Integer, ModularCube> doInBackground(String... params) {
+    protected TreeMap<Long, ModularCube> doInBackground(String... params) {
         String response = "Retry later";
         while (response.contains("Retry later")) {
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -83,7 +83,7 @@ public class SendActivateTask extends AsyncTask<String, Integer, TreeMap<Integer
     }
 
     @Override
-    protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
+    protected void onPostExecute(TreeMap<Long, ModularCube> modularCubes) {
         try {
             Thread.sleep(200);
         } catch (InterruptedException e) {

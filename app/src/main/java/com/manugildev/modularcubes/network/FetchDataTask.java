@@ -17,10 +17,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, ModularCube>> {
+public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Long, ModularCube>> {
 
     MainActivityFragment fragment;
-    TreeMap<Integer, ModularCube> modularCubes;
+    TreeMap<Long, ModularCube> modularCubes;
     OkHttpClient client;
 
     public FetchDataTask(MainActivityFragment fragment) {
@@ -35,7 +35,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
     }
 
     @Override
-    protected TreeMap<Integer, ModularCube> doInBackground(String... params) {
+    protected TreeMap<Long, ModularCube> doInBackground(String... params) {
         String response = "";
         String url = "https://io.adafruit.com/api/v2/gikdew/feeds/data";
         String aioKey = "dbd315bf60794acf9a8c51bc2e19c371"; //TODO: This to file
@@ -79,7 +79,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
             ModularCube c = new ModularCube();
             c.setIp(key);
-            c.setDeviceId(Integer.valueOf(key));
+            c.setDeviceId(Long.valueOf(key));
             c.setCurrentOrientation(cubeJson.getInt("cO"));
             c.setActivated(cubeJson.getInt("a") == 1);
             modularCubes.put(c.getDeviceId(), c);
@@ -92,7 +92,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Integer, Modu
     }
 
     @Override
-    protected void onPostExecute(TreeMap<Integer, ModularCube> modularCubes) {
+    protected void onPostExecute(TreeMap<Long, ModularCube> modularCubes) {
         fragment.refreshData(modularCubes);
         fragment.callAsynchronousTask(5000);
     }
