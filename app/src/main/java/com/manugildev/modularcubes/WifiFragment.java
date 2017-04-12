@@ -1,108 +1,136 @@
 package com.manugildev.modularcubes;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.net.Uri;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.format.Formatter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+
+import com.manugildev.modularcubes.network.TcpClient;
+
+import java.util.List;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link WifiFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link WifiFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class WifiFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    private OnFragmentInteractionListener mListener;
-
-    public WifiFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment WifiFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static WifiFragment newInstance(String param1, String param2) {
-        WifiFragment fragment = new WifiFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    String networkSSID = "CUBES_MESH";
+    BroadcastReceiver receiver;
+    WifiManager wifiManager;
+    TcpClient mTcpClient;
+    private Button button;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
+        Context context = getActivity().getApplicationContext();
+        wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_wifi, container, false);
-    }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
+        WifiInfo info = wifiManager.getConnectionInfo();
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (!info.getSSID().contains(networkSSID)) {
+            WifiConfiguration conf = new WifiConfiguration();
+            conf.SSID = "\"" + networkSSID + "\"";
+            wifiManager.addNetwork(conf);
+            List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+            for (WifiConfiguration i : list) {
+                if (i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
+                    wifiManager.disconnect();
+                    wifiManager.enableNetwork(i.networkId, true);
+                    wifiManager.reconnect();
+                    break;
+                }
+            }
+            receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    final String action = intent.getAction();
+
+                    if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                        NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                        boolean connected = info.isConnected();
+                        if (connected) {
+                            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                            String ssid = wifiInfo.getSSID();
+                            Log.d("SSID", ssid + " " + networkSSID);
+                            if (ssid.contains(networkSSID)) {
+                                int gateway = wifiManager.getDhcpInfo().gateway;
+                                startTCP(Formatter.formatIpAddress(gateway));
+                            }
+                        }
+                    }
+                }
+            };
+            getActivity().registerReceiver(receiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+            int gateway = wifiManager.getDhcpInfo().gateway;
+            startTCP(Formatter.formatIpAddress(gateway));
         }
+    }
+
+    private void startTCP(String gateway) {
+        mTcpClient = new TcpClient(new TcpClient.OnMessageReceived() {
+            @Override
+            public void messageReceived(String message) {
+                Log.d("Message", message);
+            }
+        }, gateway);
+        new ConnectTask(this, gateway).execute("");
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_wifi, container, false);
+        button = (Button) rootView.findViewById(R.id.button);
+        return rootView;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    class ConnectTask extends AsyncTask<String, String, TcpClient> {
+        private final String gateway;
+        private final WifiFragment fragment;
+
+        public ConnectTask(WifiFragment fragment, String gateway) {
+            this.gateway = gateway;
+            this.fragment = fragment;
+        }
+
+        @Override
+        protected TcpClient doInBackground(String... message) {
+            mTcpClient.run();
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            //response received from server
+            Log.d("test", "response " + values[0]);
+            //process server response here....
+
+        }
+
+    }
+
+    @Override
+    public void onDestroy() {
+        mTcpClient.stopClient();
+        super.onDestroy();
     }
 }

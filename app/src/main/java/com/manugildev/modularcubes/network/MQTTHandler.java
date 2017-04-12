@@ -37,7 +37,7 @@ public class MQTTHandler implements MqttCallback {
     public void connect(final String... subscriptions) {
         String clientId = MqttClient.generateClientId();
         // TODO: Send the domain to the constant's place
-        client = new MqttAndroidClient(fragment.getContext(), "tcp://178.62.89.130:1883", clientId);
+        client = new MqttAndroidClient(fragment.getActivity().getApplicationContext(), "tcp://178.62.89.130:1883", clientId);
         client.setCallback(this);
         try {
             IMqttToken token = client.connect();
