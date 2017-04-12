@@ -8,7 +8,6 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.format.Formatter;
@@ -18,28 +17,31 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.manugildev.modularcubes.network.TcpClient;
+import com.manugildev.modularcubes.network.UdpServerThread;
 
 import java.util.List;
 
 
 public class WifiFragment extends Fragment {
+    Context context;
 
     String networkSSID = "CUBES_MESH";
     BroadcastReceiver receiver;
     WifiManager wifiManager;
-    TcpClient mTcpClient;
     private Button button;
+    private String gateway;
+    private UdpServerThread udpServerThread;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Context context = getActivity().getApplicationContext();
+        context = getActivity().getApplicationContext();
+        startWifi();
+    }
+
+    private void startWifi() {
         wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-
-
         WifiInfo info = wifiManager.getConnectionInfo();
-
         if (!info.getSSID().contains(networkSSID)) {
             WifiConfiguration conf = new WifiConfiguration();
             conf.SSID = "\"" + networkSSID + "\"";
@@ -66,8 +68,8 @@ public class WifiFragment extends Fragment {
                             String ssid = wifiInfo.getSSID();
                             Log.d("SSID", ssid + " " + networkSSID);
                             if (ssid.contains(networkSSID)) {
-                                int gateway = wifiManager.getDhcpInfo().gateway;
-                                startTCP(Formatter.formatIpAddress(gateway));
+                                gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
+                                startUDP(gateway);
                             }
                         }
                     }
@@ -75,25 +77,26 @@ public class WifiFragment extends Fragment {
             };
             getActivity().registerReceiver(receiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         } else {
-            int gateway = wifiManager.getDhcpInfo().gateway;
-            startTCP(Formatter.formatIpAddress(gateway));
+            gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
+            startUDP(gateway);
+
         }
     }
 
-    private void startTCP(String gateway) {
-        mTcpClient = new TcpClient(new TcpClient.OnMessageReceived() {
-            @Override
-            public void messageReceived(String message) {
-                Log.d("Message", message);
-            }
-        }, gateway);
-        new ConnectTask(this, gateway).execute("");
+    private void startUDP(String gateway) {
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_wifi, container, false);
         button = (Button) rootView.findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                udpServerThread.sendMessage("Manuel? Android");
+            }
+        });
         return rootView;
     }
 
@@ -102,35 +105,9 @@ public class WifiFragment extends Fragment {
         super.onDetach();
     }
 
-    class ConnectTask extends AsyncTask<String, String, TcpClient> {
-        private final String gateway;
-        private final WifiFragment fragment;
-
-        public ConnectTask(WifiFragment fragment, String gateway) {
-            this.gateway = gateway;
-            this.fragment = fragment;
-        }
-
-        @Override
-        protected TcpClient doInBackground(String... message) {
-            mTcpClient.run();
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.d("test", "response " + values[0]);
-            //process server response here....
-
-        }
-
-    }
-
     @Override
     public void onDestroy() {
-        mTcpClient.stopClient();
+        // mTcpClient.stopClient();
         super.onDestroy();
     }
 }

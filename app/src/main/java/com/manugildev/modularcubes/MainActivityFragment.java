@@ -1,12 +1,21 @@
 package com.manugildev.modularcubes;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
@@ -27,9 +36,10 @@ import android.widget.ViewSwitcher;
 
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.network.FetchDataTask;
-import com.manugildev.modularcubes.network.MQTTHandler;
+import com.manugildev.modularcubes.network.UdpServerThread;
 import com.manugildev.modularcubes.ui.FlatColors;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -50,10 +60,20 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     FetchDataTask fetchDataTask;
     Switch switchButton;
 
-    MQTTHandler mqttHandler;
+    BroadcastReceiver receiver;
+    WifiManager wifiManager;
+    String gateway;
+    String networkSSID = "CUBES_MESH";
+    UdpServerThread udpServerThread;
 
     public MainActivityFragment() {
         this.fragment = this;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        startWifi();
     }
 
     @Override
@@ -69,9 +89,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mData = new TreeMap<Long, ModularCube>();
-        mqttHandler = new MQTTHandler(this);
-        mqttHandler.connect(DATA_TOPIC);
+        mData = new TreeMap<>();
         gridLayout = (GridLayout) getActivity().findViewById(gridlayout);
         gridLayout.removeAllViews();
         //callAsynchronousTask(0);
@@ -145,7 +163,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         touchFrameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
+                udpServerThread.sendActivate(cube);
             }
         });
         ImageView imageViewLight = (ImageView) viewCube.findViewById(R.id.imageViewLight);
@@ -238,16 +256,65 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(false);
-                mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
+                udpServerThread.sendActivate( cube);
             }
         } else {
             for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(true);
-                mqttHandler.publishActivate(ACTIVATE_TOPIC, cube);
+                udpServerThread.sendActivate(cube);
             }
         }
 
+    }
+
+    private void startWifi() {
+        wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = wifiManager.getConnectionInfo();
+        if (!info.getSSID().contains(networkSSID)) {
+            WifiConfiguration conf = new WifiConfiguration();
+            conf.SSID = "\"" + networkSSID + "\"";
+            wifiManager.addNetwork(conf);
+            List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+            for (WifiConfiguration i : list) {
+                if (i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
+                    wifiManager.disconnect();
+                    wifiManager.enableNetwork(i.networkId, true);
+                    wifiManager.reconnect();
+                    break;
+                }
+            }
+            receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    final String action = intent.getAction();
+
+                    if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                        NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                        boolean connected = info.isConnected();
+                        if (connected) {
+                            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                            String ssid = wifiInfo.getSSID();
+                            Log.d("SSID", ssid + " " + networkSSID);
+                            if (ssid.contains(networkSSID)) {
+                                gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
+                                startUDP();
+                            }
+                        }
+                    }
+                }
+            };
+            getActivity().registerReceiver(receiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
+        } else {
+            gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
+            startUDP();
+
+        }
+    }
+
+    private void startUDP() {
+        udpServerThread = new UdpServerThread(fragment, gateway, 8266);
+        udpServerThread.start();
     }
 
 }
