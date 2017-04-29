@@ -256,7 +256,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(false);
-                udpServerThread.sendActivate( cube);
+                udpServerThread.sendActivate(cube);
             }
         } else {
             for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
@@ -312,9 +312,31 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         }
     }
 
-    private void startUDP() {
+    @Override
+    public void onStop() {
+        super.onStop();
+        try {
+            getActivity().unregisterReceiver(receiver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void startUDP() {
         udpServerThread = new UdpServerThread(fragment, gateway, 8266);
+        udpServerThread.setRunning(false);
         udpServerThread.start();
     }
 
+    @Override
+    public void onPause() {
+       // udpServerThread.setRunning(false);
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        udpServerThread.setRunning(false);
+        super.onDestroy();
+    }
 }

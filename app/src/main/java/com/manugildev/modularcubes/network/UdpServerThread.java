@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -132,11 +133,11 @@ public class UdpServerThread extends Thread {
                 int port = packet.getPort();
 
                 final String received = new String(data);
-                if (received.contains("data=")) //TODO: Topic based!
+                if (received.contains("data=") && fragment != null && fragment.getActivity() != null) //TODO: Topic based!
                     fragment.getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            String d = received.replace("data=","");
+                            String d = received.replace("data=", "");
                             fragment.refreshData(parseJson(d));
                         }
                     });
@@ -149,9 +150,21 @@ public class UdpServerThread extends Thread {
             }
 
             Log.e(TAG, "UDP Server ended");
-
+        } catch (BindException e) {
+            if (socket != null) {
+                socket.close();
+                Log.e(TAG, "socket.close()");
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
+            if (fragment != null) fragment.startUDP();
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+
         } finally {
             if (socket != null) {
                 socket.close();
