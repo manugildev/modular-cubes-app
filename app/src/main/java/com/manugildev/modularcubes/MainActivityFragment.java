@@ -35,7 +35,6 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import com.manugildev.modularcubes.data.models.ModularCube;
-import com.manugildev.modularcubes.network.FetchDataTask;
 import com.manugildev.modularcubes.network.UdpServerThread;
 import com.manugildev.modularcubes.ui.FlatColors;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
@@ -64,9 +63,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     CountDownTimer mCountDownTimer, mAnimationCountDownTimer;
     TextView mNumberOfCubesTV, mNumberTV, mScoreTV;
     CircularProgressBar mCircularProgressBar;
-    Button mStartB, mSumOkB;
+    Button mStartB;
 
-    FetchDataTask fetchDataTask;
     BroadcastReceiver receiver;
     WifiManager wifiManager;
     String gateway;
@@ -105,8 +103,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mNumberTV.setAlpha(0);
         mNumberTV.setScaleX(5);
         mNumberTV.setScaleY(5);
-        mSumOkB = (Button) rootView.findViewById(R.id.buttonSumOK);
-        mSumOkB.setOnClickListener(this);
+        //mSumOkB = (Button) rootView.findViewById(R.id.buttonSumOK);
+        //mSumOkB.setOnClickListener(this);
         mScoreTV = (TextView) rootView.findViewById(R.id.tvScore);
         resetVariables();
         return rootView;
@@ -198,9 +196,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     private void updateNumberOfCubesTextView() {
-        Resources res = getResources();
-        String text = res.getString(R.string.number_of_cubes, mData.size() + "\n", (float) timeLeft / 1000);
-        mNumberOfCubesTV.setText(text);
+        try {
+            Resources res = getResources();
+            String text = res.getString(R.string.number_of_cubes, mData.size() + "\n", (float) timeLeft / 1000);
+            mNumberOfCubesTV.setText(text);
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createViewForCube(final ModularCube cube) {
@@ -376,7 +378,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onStop() {
         super.onStop();
-        mCountDownTimer.cancel();
+        if (mCountDownTimer != null) mCountDownTimer.cancel();
         try {
             getActivity().unregisterReceiver(receiver);
         } catch (Exception e) {
@@ -385,6 +387,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     public void startUDP() {
+        if (udpServerThread != null) {
+            udpServerThread.setRunning(false);
+            udpServerThread.interrupt();
+        }
         udpServerThread = new UdpServerThread(fragment, gateway, 8266);
         udpServerThread.setRunning(false);
         udpServerThread.start();
@@ -393,15 +399,14 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onPause() {
         // udpServerThread.setRunning(false);
-        mCountDownTimer.cancel();
+        if (mCountDownTimer != null) mCountDownTimer.cancel();
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        mCountDownTimer.cancel();
-        if (udpServerThread != null)
-            udpServerThread.setRunning(false);
+        if (mCountDownTimer != null) mCountDownTimer.cancel();
+        if (udpServerThread != null) udpServerThread.setRunning(false);
         super.onDestroy();
     }
 
@@ -415,23 +420,23 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 pauseGame();
                 mStartB.setText("START GAME");
             }
-        } else if (view.getId() == R.id.buttonSumOK) {
+        } /*else if (view.getId() == R.id.buttonSumOK) {
             currentTime = Math.max(minimumTime, currentTime -= decrementTime);
             changeScore(score += 1);
             if (mCountDownTimer != null)
                 mCountDownTimer.cancel();
             startTimer(currentTime);
-        }
+        }*/
     }
 
     private void startGame() {
         resetVariables();
-        mNumberTV.setScaleX(5);
-        mNumberTV.setScaleY(5);
         gridLayout.animate().scaleX(0).scaleY(0).setDuration(300);
+        mNumberTV.setScaleX(0);
+        mNumberTV.setScaleY(0);
         mCircularProgressBar.animate().scaleX(1).scaleY(1).setDuration(500);
-        mNumberTV.animate().scaleX(1).scaleY(1).setDuration(300);
-        mNumberTV.animate().alpha(1).setDuration(300);
+        mNumberTV.animate().scaleX(1).scaleY(1).setDuration(500).setStartDelay(300);
+        mNumberTV.animate().alpha(1).setDuration(500).setStartDelay(300);
         startTimer(currentTime);
     }
 
@@ -443,7 +448,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     private void pauseGame() {
-        gridLayout.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay(300);
+        gridLayout.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay(300).setStartDelay(300);
         mCircularProgressBar.animate().scaleX(5).scaleY(5).setDuration(300);
         mNumberTV.animate().scaleX(0).scaleY(0).setDuration(300);
         mNumberTV.animate().alpha(0).setDuration(300);
@@ -476,9 +481,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             tempCube = entry.getValue();
             total += tempCube.getCurrentOrientation();
         }
-        Log.d("Total", String.valueOf(total));
-        Log.d("CurrentNumber", String.valueOf(currentNumber));
-        if (total == currentNumber) {
+        if (total == currentNumber && total != 0) {
             currentTime = Math.max(minimumTime, currentTime -= decrementTime);
             if (mCountDownTimer != null)
                 mCountDownTimer.cancel();

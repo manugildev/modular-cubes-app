@@ -14,6 +14,7 @@ import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.TreeMap;
 
@@ -27,6 +28,7 @@ public class UdpServerThread extends Thread {
     DatagramPacket packet;
 
     boolean running;
+    private boolean weGotSomething = false;
 
     public UdpServerThread(MainActivityFragment fragment, String gateway, int serverPort) {
         super();
@@ -40,7 +42,8 @@ public class UdpServerThread extends Thread {
     }
 
     public boolean sendMessage(String message) {
-        while (true) {
+        while (!weGotSomething) {
+
             if (socket == null) return false;
             byte[] send_data = new byte[1024];
             String str = message;
@@ -49,7 +52,10 @@ public class UdpServerThread extends Thread {
             try {
                 send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
                 socket.send(send_packet);
+                System.out.println("Message sent " + message);
                 break;
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -119,11 +125,12 @@ public class UdpServerThread extends Thread {
         try {
             System.out.println("Starting UDP Server");
             socket = new DatagramSocket(serverPort);
-            sendMessage("android");
-            System.out.println("UDP Server is running");
-            while (running) {
-                byte[] buf = new byte[256];
 
+            System.out.println("UDP Server is running");
+            sendMessage("android");
+            while (running) {
+
+                byte[] buf = new byte[256];
                 // receive request
                 packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);     //this code block the program flow
@@ -133,7 +140,7 @@ public class UdpServerThread extends Thread {
                 int port = packet.getPort();
 
                 final String received = new String(data);
-                if (received.contains("data=") && fragment != null && fragment.getActivity() != null) //TODO: Topic based!
+                if (received.contains("data=") && fragment != null && fragment.getActivity() != null) { //TODO: Topic based!
                     fragment.getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -141,20 +148,22 @@ public class UdpServerThread extends Thread {
                             fragment.refreshData(parseJson(d));
                         }
                     });
-
+                    weGotSomething = true;
+                }
                 System.out.println(received);
                 String dString = "Response Message from android";
                 buf = dString.getBytes();
                 packet = new DatagramPacket(buf, buf.length, address, port);
                 //socket.send(packet);
+
             }
 
             Log.e(TAG, "UDP Server ended");
         } catch (BindException e) {
             if (socket != null) {
                 socket.close();
-                Log.e(TAG, "socket.close()");
             }
+            setRunning(false);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e1) {
