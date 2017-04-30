@@ -40,19 +40,21 @@ public class UdpServerThread extends Thread {
     }
 
     public boolean sendMessage(String message) {
-        if (socket == null) return false;
-        byte[] send_data = new byte[1024];
-        String str = message;
-        send_data = str.getBytes();
-        DatagramPacket send_packet = null;
-        try {
-            send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
-            socket.send(send_packet);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        while (true) {
+            if (socket == null) return false;
+            byte[] send_data = new byte[1024];
+            String str = message;
+            send_data = str.getBytes();
+            DatagramPacket send_packet;
+            try {
+                send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
+                socket.send(send_packet);
+                break;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        return true;
     }
 
     public boolean sendActivate(ModularCube cube) {
@@ -65,8 +67,6 @@ public class UdpServerThread extends Thread {
             e.printStackTrace();
             return false;
         }
-
-
     }
 
     //================================================================================

@@ -94,6 +94,6 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Long, Modular
     @Override
     protected void onPostExecute(TreeMap<Long, ModularCube> modularCubes) {
         fragment.refreshData(modularCubes);
-        fragment.callAsynchronousTask(5000);
+        //fragment.callAsynchronousTask(5000);
     }
 }

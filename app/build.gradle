@@ -33,6 +33,8 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
     compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
     compile 'org.eclipse.paho:org.eclipse.paho.android.service:1.0.2'
-    compile 'com.android.support:cardview-v7:26.0.0-alpha1'
-    compile 'com.android.support:support-v4:24.2.1'
+    compile 'com.android.support:cardview-v7:24.1.1'
+    compile 'com.android.support:support-v4:24.1.1'
+    compile 'com.mikhaellopez:circularprogressbar:1.1.1'
+    compile 'com.github.flepsik:progress-ring-view:1.1.2'
 }

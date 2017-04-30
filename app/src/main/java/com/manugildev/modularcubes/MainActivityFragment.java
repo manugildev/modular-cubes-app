@@ -24,12 +24,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
@@ -38,33 +38,48 @@ import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.network.FetchDataTask;
 import com.manugildev.modularcubes.network.UdpServerThread;
 import com.manugildev.modularcubes.ui.FlatColors;
+import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import static com.manugildev.modularcubes.R.drawable.activate_off;
 import static com.manugildev.modularcubes.R.drawable.activate_on;
 import static com.manugildev.modularcubes.R.id.gridlayout;
 
-public class MainActivityFragment extends Fragment implements CompoundButton.OnCheckedChangeListener {
+public class MainActivityFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
     private static final String ACTIVATE_TOPIC = "activate";
     public static final String DATA_TOPIC = "data";
 
+    // Modular Cubes
     TreeMap<Long, ModularCube> mData;
     GridLayout gridLayout;
     final MainActivityFragment fragment;
-    ProgressBar progressBar;
-    CountDownTimer mCountDownTimer;
-    FetchDataTask fetchDataTask;
-    Switch switchButton;
 
+    // UI Components
+    ProgressBar progressBar;
+    CountDownTimer mCountDownTimer, mAnimationCountDownTimer;
+    TextView mNumberOfCubesTV, mNumberTV, mScoreTV;
+    CircularProgressBar mCircularProgressBar;
+    Button mStartB, mSumOkB;
+
+    FetchDataTask fetchDataTask;
     BroadcastReceiver receiver;
     WifiManager wifiManager;
     String gateway;
     String networkSSID = "CUBES_MESH";
     UdpServerThread udpServerThread;
+
+    //GameLogic Variables
+    int currentNumber = 0;
+    int currentTime = 5000;
+    int minimumTime = 2000;
+    long timeLeft = 0;
+    int decrementTime = 300;
+    int score = 0;
 
     public MainActivityFragment() {
         this.fragment = this;
@@ -80,9 +95,20 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         progressBar = (ProgressBar) rootView.findViewById(R.id.progressBarTimer);
-        switchButton = (Switch) rootView.findViewById(R.id.switchButton);
-        switchButton.setAlpha(0);
-        switchButton.setOnCheckedChangeListener(this);
+        mNumberOfCubesTV = (TextView) rootView.findViewById(R.id.tvNumberCubes);
+        mStartB = (Button) rootView.findViewById(R.id.buttonStart);
+        mStartB.setOnClickListener(this);
+        mCircularProgressBar = (CircularProgressBar) rootView.findViewById(R.id.timeCircularProgressBar);
+        mCircularProgressBar.setScaleX(5);
+        mCircularProgressBar.setScaleY(5);
+        mNumberTV = (TextView) rootView.findViewById(R.id.tvNumber);
+        mNumberTV.setAlpha(0);
+        mNumberTV.setScaleX(5);
+        mNumberTV.setScaleY(5);
+        mSumOkB = (Button) rootView.findViewById(R.id.buttonSumOK);
+        mSumOkB.setOnClickListener(this);
+        mScoreTV = (TextView) rootView.findViewById(R.id.tvScore);
+        resetVariables();
         return rootView;
     }
 
@@ -92,26 +118,58 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mData = new TreeMap<>();
         gridLayout = (GridLayout) getActivity().findViewById(gridlayout);
         gridLayout.removeAllViews();
-        //callAsynchronousTask(0);
+        gridLayout.setAlpha(1);
+        refreshData(mData);
     }
 
-    public void callAsynchronousTask(int milliseconds) {
-        final int[] i = {0};
-        mCountDownTimer = new CountDownTimer(milliseconds, milliseconds / (progressBar.getMax() + 10)) {
+    public void startTimer(final int milliseconds) {
+        final float[] i = {0};
+        generateRandomNumber();
+        mCircularProgressBar.setProgressWithAnimation(100, 250);
+        mAnimationCountDownTimer = new CountDownTimer(250, 1) {
             @Override
             public void onTick(long l) {
-                i[0] += 1;
-                progressBar.setProgress(i[0]);
             }
 
             @Override
             public void onFinish() {
-                progressBar.setProgress(progressBar.getMax());
-                fetchDataTask = new FetchDataTask(fragment);
-                fetchDataTask.execute();
+                mCountDownTimer.cancel();
+                mCountDownTimer.start();
+                generateRandomNumber();
             }
         };
-        mCountDownTimer.start();
+        mAnimationCountDownTimer.cancel();
+        mAnimationCountDownTimer.start();
+        mCountDownTimer = new CountDownTimer(milliseconds, 1) {
+            @Override
+            public void onTick(long l) {
+                float percent = (float) l / (float) milliseconds;
+                mCircularProgressBar.setProgress(percent * 100);
+                timeLeft = l;
+                updateNumberOfCubesTextView();
+            }
+
+            @Override
+            public void onFinish() {
+                mCircularProgressBar.setProgress(0);
+                timeLeft = 0;
+                updateNumberOfCubesTextView();
+                finishGame();
+            }
+        };
+
+    }
+
+    private void generateRandomNumber() {
+        Random r = new Random();
+        int tempNumber;
+        do {
+            int numberOfCubes = mData.size();
+            tempNumber = r.nextInt(((numberOfCubes * 6) + 1) - numberOfCubes) + numberOfCubes;
+        } while (currentNumber == tempNumber);
+        currentNumber = tempNumber;
+        mNumberTV.setText(currentNumber + "");
+
     }
 
     public void refreshData(TreeMap<Long, ModularCube> modularCubes) {
@@ -119,11 +177,9 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             mData.clear();
             gridLayout.removeAllViews();
         }
-        Log.d("Calling", "refreshDataOutside()");
         for (Map.Entry<Long, ModularCube> entry : modularCubes.entrySet()) {
             Long key = entry.getKey();
             ModularCube cube = entry.getValue();
-            Log.d("BreakPointCube", cube.toString());
             if ((mData == null || !mData.containsKey(key)) && fragment.getActivity() != null) {
                 cube.setActivity(this);
                 createViewForCube(cube);
@@ -131,13 +187,20 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
                 animateCubeOnCreate(cube.getView());
                 refreshGridLayout();
-                Log.d("Calling", "refreshData()");
-
             } else {
                 if (mData.get(cube.getDeviceId()).updateCube(cube))
                     refreshGridLayout();
             }
         }
+        updateNumberOfCubesTextView();
+        if (mData.size() != 0)
+            checkSumOfCubes();
+    }
+
+    private void updateNumberOfCubesTextView() {
+        Resources res = getResources();
+        String text = res.getString(R.string.number_of_cubes, mData.size() + "\n", (float) timeLeft / 1000);
+        mNumberOfCubesTV.setText(text);
     }
 
     private void createViewForCube(final ModularCube cube) {
@@ -217,7 +280,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             l.height = cubeSize;
             l.width = cubeSize;
         }
-        switchButton.animate().alpha(1).setDuration(300).setStartDelay(500);
     }
 
     private void animateCubeOnCreate(View v) {
@@ -308,13 +370,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         } else {
             gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
             startUDP();
-
         }
     }
 
     @Override
     public void onStop() {
         super.onStop();
+        mCountDownTimer.cancel();
         try {
             getActivity().unregisterReceiver(receiver);
         } catch (Exception e) {
@@ -330,13 +392,100 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     @Override
     public void onPause() {
-       // udpServerThread.setRunning(false);
+        // udpServerThread.setRunning(false);
+        mCountDownTimer.cancel();
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        udpServerThread.setRunning(false);
+        mCountDownTimer.cancel();
+        if (udpServerThread != null)
+            udpServerThread.setRunning(false);
         super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getId() == R.id.buttonStart) {
+            if (mStartB.getText().equals("START GAME")) {
+                startGame();
+                mStartB.setText("PAUSE");
+            } else {
+                pauseGame();
+                mStartB.setText("START GAME");
+            }
+        } else if (view.getId() == R.id.buttonSumOK) {
+            currentTime = Math.max(minimumTime, currentTime -= decrementTime);
+            changeScore(score += 1);
+            if (mCountDownTimer != null)
+                mCountDownTimer.cancel();
+            startTimer(currentTime);
+        }
+    }
+
+    private void startGame() {
+        resetVariables();
+        mNumberTV.setScaleX(5);
+        mNumberTV.setScaleY(5);
+        gridLayout.animate().scaleX(0).scaleY(0).setDuration(300);
+        mCircularProgressBar.animate().scaleX(1).scaleY(1).setDuration(500);
+        mNumberTV.animate().scaleX(1).scaleY(1).setDuration(300);
+        mNumberTV.animate().alpha(1).setDuration(300);
+        startTimer(currentTime);
+    }
+
+    private void resetVariables() {
+        currentNumber = 0;
+        currentTime = 5000;
+        timeLeft = 0;
+        changeScore(0);
+    }
+
+    private void pauseGame() {
+        gridLayout.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay(300);
+        mCircularProgressBar.animate().scaleX(5).scaleY(5).setDuration(300);
+        mNumberTV.animate().scaleX(0).scaleY(0).setDuration(300);
+        mNumberTV.animate().alpha(0).setDuration(300);
+        mCountDownTimer.cancel();
+    }
+
+    private void finishGame() {
+        mAnimationCountDownTimer.cancel();
+        mCountDownTimer.cancel();
+        mStartB.setText("START GAME");
+        gridLayout.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay(300);
+        mCircularProgressBar.animate().scaleX(5).scaleY(5).setDuration(300);
+        mNumberTV.animate().scaleX(0).scaleY(0).setDuration(300);
+        mNumberTV.animate().alpha(0).setDuration(300);
+
+    }
+
+    private void changeScore(int score) {
+        this.score = score;
+        Resources res = getResources();
+        String text = res.getString(R.string.score, score);
+        mScoreTV.setText(text);
+    }
+
+
+    private void checkSumOfCubes() {
+        int total = 0;
+        ModularCube tempCube;
+        for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
+            tempCube = entry.getValue();
+            total += tempCube.getCurrentOrientation();
+        }
+        Log.d("Total", String.valueOf(total));
+        Log.d("CurrentNumber", String.valueOf(currentNumber));
+        if (total == currentNumber) {
+            currentTime = Math.max(minimumTime, currentTime -= decrementTime);
+            if (mCountDownTimer != null)
+                mCountDownTimer.cancel();
+            changeScore(score += 1);
+            startTimer(currentTime);
+        } else {
+
+        }
     }
 }
