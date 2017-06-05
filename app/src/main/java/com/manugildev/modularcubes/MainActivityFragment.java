@@ -170,11 +170,11 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     }
 
-    public void refreshData(TreeMap<Long, ModularCube> modularCubes) {
-        if (modularCubes.size() < mData.size()) {
+    public void refreshData() {
+       /* if (modularCubes.size() < mData.size()) {
             mData.clear();
             gridLayout.removeAllViews();
-        }
+        }*/
         for (Map.Entry<Long, ModularCube> entry : modularCubes.entrySet()) {
             Long key = entry.getKey();
             ModularCube cube = entry.getValue();
@@ -490,5 +490,30 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         } else {
 
         }
+    }
+
+    public void addCube(String nodeId) {
+        long id = Long.valueOf(nodeId);
+        ModularCube c = new ModularCube();
+        c.setIp("-1");
+        c.setDeviceId(id);
+        c.setCurrentOrientation(-1);
+        c.setActivated(false);
+        mData.put(id, c);
+        refreshData();
+    }
+
+
+    public void updateInformation(TreeMap<Long, ModularCube> cubeInformation) {
+        System.out.println(cubeInformation.firstEntry().toString());
+        mData.put(cubeInformation.firstKey(), cubeInformation.get(cubeInformation.firstKey()));
+        refreshData();
+
+    }
+
+    public void removeCube(String nodeId) {
+        long id = Long.valueOf(nodeId);
+        mData.remove(id);
+        refreshData();
     }
 }

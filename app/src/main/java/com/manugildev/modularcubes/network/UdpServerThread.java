@@ -110,9 +110,9 @@ public class UdpServerThread extends Thread {
             c.setCurrentOrientation(cubeJson.getInt("cO"));
             c.setActivated(cubeJson.getInt("a") == 1);
             modularCubes.put(c.getDeviceId(), c);
-            if (cubeJson.has("c")) {
+            /*if (cubeJson.has("c")) {
                 parseCubes(modularCubes, cubeJson.getJSONObject("c"));
-            }
+            }*/
         }
         return modularCubes;
     }
@@ -129,7 +129,6 @@ public class UdpServerThread extends Thread {
             System.out.println("UDP Server is running");
             sendMessage("android");
             while (running) {
-
                 byte[] buf = new byte[256];
                 // receive request
                 packet = new DatagramPacket(buf, buf.length);
@@ -139,17 +138,11 @@ public class UdpServerThread extends Thread {
                 InetAddress address = packet.getAddress();
                 int port = packet.getPort();
 
-                final String received = new String(data);
-                if (received.contains("data=") && fragment != null && fragment.getActivity() != null) { //TODO: Topic based!
-                    fragment.getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            String d = received.replace("data=", "");
-                            fragment.refreshData(parseJson(d));
-                        }
-                    });
-                    weGotSomething = true;
+                String received = new String(data);
+                if (fragment != null && fragment.getActivity() != null) { //TODO: Topic based!
+                    parseReceivedData(received);
                 }
+
                 System.out.println(received);
                 String dString = "Response Message from android";
                 buf = dString.getBytes();
@@ -181,4 +174,45 @@ public class UdpServerThread extends Thread {
             }
         }
     }
+
+    private void parseReceivedData(final String received) {
+        if (received.startsWith("initial=")) {
+            fragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String d = received.replace("initial=", "");
+                    fragment.refreshData(parseJson(d));
+                }
+            });
+            weGotSomething = true;
+        } else if (received.startsWith("connection=")) {
+            fragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String nodeId = received.replace("connection=", "");
+                    fragment.addCube(nodeId);
+                }
+            });
+            weGotSomething = true;
+        } else if (received.startsWith("disconnection=")) {
+            fragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String nodeId= received.replace("disconnection=", "");
+                    fragment.removeCube(nodeId);
+                }
+            });
+            weGotSomething = true;
+        } else if (received.startsWith("information=")) {
+            fragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String d = received.replace("information=", "");
+                    fragment.updateInformation(parseJson(d));
+                }
+            });
+            weGotSomething = true;
+        }
+    }
 }
+
