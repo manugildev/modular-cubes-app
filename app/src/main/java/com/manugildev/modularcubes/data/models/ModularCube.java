@@ -13,12 +13,14 @@ public class ModularCube {
     private View view;
     private MainActivityFragment activity;
     private int viewId;
+    private long now = 0;
 
     public ModularCube() {
     }
 
 
     public boolean updateCube(ModularCube cube) {
+        //System.out.println("UpdateCube - " + cube.getDeviceId() + " " +cube.getCurrentOrientation());
         setIp(cube.getIp());
         setDeviceId(cube.getDeviceId());
         setCurrentOrientation(cube.getCurrentOrientation());
@@ -43,15 +45,16 @@ public class ModularCube {
     }
 
     public void setCurrentOrientation(int currentOrientation) {
-        if (this.currentOrientation != currentOrientation && activity != null) {
+        if (this.currentOrientation != currentOrientation && activity != null && viewId != 0) {
             this.currentOrientation = currentOrientation;
             activity.changeTextInButton(this);
+
         }
         this.currentOrientation = currentOrientation;
     }
 
     public void setActivated(Boolean activated) {
-        if (activity != null) {
+        if (activity != null && viewId != 0 && this.activated != activated) {
             activity.changeActivatedLight(getViewId(), activated);
         }
         this.activated = activated;
@@ -88,12 +91,14 @@ public class ModularCube {
                 ", deviceId='" + deviceId + '\'' +
                 ", currentOrientation=" + currentOrientation +
                 ", activated=" + activated +
+                ", viewId=" + viewId +
                 '}';
     }
 
     public void setViewId(int viewId) {
         this.viewId = viewId;
     }
+
     public int getViewId() {
         return this.viewId;
     }

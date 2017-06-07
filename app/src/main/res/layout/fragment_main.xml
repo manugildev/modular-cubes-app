@@ -33,15 +33,27 @@
         android:scrollbarSize="50dip"
         android:visibility="gone"/>
 
-    <TextView
-        android:id="@+id/tvNumberCubes"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_margin="5dp"
-        android:layout_toEndOf="@+id/progressBarTimer"
-        android:text="@string/number_of_cubes"/>
+        android:layout_toEndOf="@+id/progressBarTimer">
+        <TextView
+            android:id="@+id/tvNumberCubes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/number_of_cubes"/>
+        <TextView
+            android:id="@+id/timeConnections"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""/>
+
+    </LinearLayout>
+
 
     <TextView
         android:id="@+id/tvScore"
@@ -72,15 +84,24 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/timeCircularProgressBar"
         android:gravity="center"
+        android:layout_centerHorizontal="true"
+        android:paddingEnd="20dp"
+        android:paddingStart="20dp"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/buttonStart"
-            android:layout_width="wrap_content"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_below="@id/timeCircularProgressBar"
-            android:layout_centerHorizontal="true"
             android:text="@string/start_game"
+            android:visibility="visible"
+            android:layout_width="match_parent"/>
+        <Button
+            android:id="@+id/buttonConnections"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/connections_button"
             android:visibility="visible"/>
 
         <!--<Button-->

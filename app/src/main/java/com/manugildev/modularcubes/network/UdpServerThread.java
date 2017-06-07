@@ -42,6 +42,7 @@ public class UdpServerThread extends Thread {
     }
 
     public boolean sendMessage(String message) {
+        weGotSomething = false;
         while (!weGotSomething) {
 
             if (socket == null) return false;
@@ -106,10 +107,12 @@ public class UdpServerThread extends Thread {
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
             ModularCube c = new ModularCube();
             c.setIp(key);
+            c.setActivity(fragment);
             c.setDeviceId(Long.valueOf(key));
             c.setCurrentOrientation(cubeJson.getInt("cO"));
             c.setActivated(cubeJson.getInt("a") == 1);
             modularCubes.put(c.getDeviceId(), c);
+            break;
             /*if (cubeJson.has("c")) {
                 parseCubes(modularCubes, cubeJson.getJSONObject("c"));
             }*/
@@ -129,7 +132,7 @@ public class UdpServerThread extends Thread {
             System.out.println("UDP Server is running");
             sendMessage("android");
             while (running) {
-                byte[] buf = new byte[256];
+                byte[] buf = new byte[800];
                 // receive request
                 packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);     //this code block the program flow
@@ -139,7 +142,7 @@ public class UdpServerThread extends Thread {
                 int port = packet.getPort();
 
                 String received = new String(data);
-                if (fragment != null && fragment.getActivity() != null) { //TODO: Topic based!
+                if (fragment != null && fragment.getActivity() != null) {
                     parseReceivedData(received);
                 }
 
@@ -181,7 +184,7 @@ public class UdpServerThread extends Thread {
                 @Override
                 public void run() {
                     String d = received.replace("initial=", "");
-                    fragment.refreshData(parseJson(d));
+                    fragment.updateInformation(parseJson(d));
                 }
             });
             weGotSomething = true;
@@ -190,7 +193,7 @@ public class UdpServerThread extends Thread {
                 @Override
                 public void run() {
                     String nodeId = received.replace("connection=", "");
-                    fragment.addCube(nodeId);
+                    //fragment.addCube(nodeId);
                 }
             });
             weGotSomething = true;
@@ -198,8 +201,8 @@ public class UdpServerThread extends Thread {
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String nodeId= received.replace("disconnection=", "");
-                    fragment.removeCube(nodeId);
+                    String nodeId = received.replace("disconnection=", "");
+                    //fragment.removeCube(nodeId);
                 }
             });
             weGotSomething = true;
@@ -212,7 +215,16 @@ public class UdpServerThread extends Thread {
                 }
             });
             weGotSomething = true;
+        } else if (received.startsWith("connections=")) {
+            final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
+            Log.d("TimeElapsed", elapsed);
+            Log.d("Connections", received.replace("connections=", ""));
+            fragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    fragment.mTimeConnectionsTv.setText(elapsed);
+                }
+            });
         }
     }
 }
-

@@ -48,9 +48,17 @@ public class FlatColors {
         this.add(GREEN);
         this.add(ORANGE);
         this.add(PURPLE);
-        this.add(SEA);
+        this.add(BLUE);
         this.add(DARK_WHITE);
         this.add(LIGHT_BLACK);
+        this.add(DARK_RED);
+        this.add(SEA);
+        this.add(BLUE);
+        this.add(GREY);
+        this.add(EVEN_DARK_RED);
+        this.add(DARK_SEA);
+        this.add(LOGO_GREEN);
+        this.add(DARK_ORANGE);
     }};
 
 

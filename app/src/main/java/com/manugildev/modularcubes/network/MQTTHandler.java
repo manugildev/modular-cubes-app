@@ -171,7 +171,7 @@ public class MQTTHandler implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         Log.d("MQTT", "Message Received: " + message.toString());
         if (topic.equals(MainActivityFragment.DATA_TOPIC)) {
-            fragment.refreshData(parseJson(message.toString()));
+            //fragment.refreshData(parseJson(message.toString()));
         }
     }
 
