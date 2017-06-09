@@ -321,7 +321,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     public void changeActivatedLight(int id, Boolean activated) {
         if (getActivity() != null && getActivity().findViewById(id) != null && id != 0) {
-            Log.d("Activated1 " + id, String.valueOf(activated));
             ImageView light = (ImageView) getActivity().findViewById(id).findViewById(R.id.imageViewLight);
             if (activated) {
                 light.setImageResource(activate_on);
@@ -531,6 +530,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         if (cubeInformation != null)
             if (mData.containsKey(cubeInformation.firstKey())) {
                 mData.get(cubeInformation.firstKey()).setCurrentOrientation(cubeInformation.get(cubeInformation.firstKey()).getCurrentOrientation());
+                mData.get(cubeInformation.firstKey()).setActivated(cubeInformation.get(cubeInformation.firstKey()).isActivated());
             } else {
                 mData.put(cubeInformation.firstKey(), cubeInformation.get(cubeInformation.firstKey()));
             }

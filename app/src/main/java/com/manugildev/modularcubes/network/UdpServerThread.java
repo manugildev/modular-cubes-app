@@ -29,6 +29,7 @@ public class UdpServerThread extends Thread {
 
     boolean running;
     private boolean weGotSomething = false;
+    private long timeSend;
 
     public UdpServerThread(MainActivityFragment fragment, String gateway, int serverPort) {
         super();
@@ -68,6 +69,13 @@ public class UdpServerThread extends Thread {
         if (socket == null) return false;
         try {
             String msg = createJsonActivateMessage(cube);
+            timeSend = System.currentTimeMillis();
+            fragment.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    fragment.mTimeConnectionsTv.setText("0");
+                }
+            });
             sendMessage(msg);
             return true;
         } catch (JSONException e) {
@@ -210,7 +218,14 @@ public class UdpServerThread extends Thread {
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    final String elapsed = String.valueOf(System.currentTimeMillis() - timeSend);
                     String d = received.replace("information=", "");
+                    fragment.getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            fragment.mTimeConnectionsTv.setText(elapsed);
+                        }
+                    });
                     fragment.updateInformation(parseJson(d));
                 }
             });
