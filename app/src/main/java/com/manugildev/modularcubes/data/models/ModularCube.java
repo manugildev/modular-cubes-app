@@ -13,6 +13,7 @@ public class ModularCube {
     private View view;
     private MainActivityFragment activity;
     private int viewId;
+    private int depth;
     private long now = 0;
 
     public ModularCube() {
@@ -27,7 +28,7 @@ public class ModularCube {
         setActivated(cube.isActivated());
         if (!this.ip.equals(cube.getIp()) || this.deviceId != cube.getDeviceId() ||
                 this.currentOrientation != cube.getCurrentOrientation() ||
-                this.activated != cube.isActivated())
+                this.activated != cube.isActivated() || this.depth != cube.getDepth())
             return true;
         return false;
     }
@@ -92,6 +93,7 @@ public class ModularCube {
                 ", currentOrientation=" + currentOrientation +
                 ", activated=" + activated +
                 ", viewId=" + viewId +
+                ", depth=" + depth +
                 '}';
     }
 
@@ -101,5 +103,16 @@ public class ModularCube {
 
     public int getViewId() {
         return this.viewId;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        if (activity != null && viewId != 0 && this.depth != depth) {
+            activity.changeCubeDepth(getViewId(), depth);
+        }
+        this.depth = depth;
     }
 }

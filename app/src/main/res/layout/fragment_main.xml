@@ -3,8 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     tools:context="com.manugildev.modularcubes.MainActivityFragment"
     tools:showIn="@layout/activity_main">
 
@@ -36,16 +36,18 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_margin="5dp"
-        android:layout_toEndOf="@+id/progressBarTimer">
+        android:layout_toEndOf="@+id/progressBarTimer"
+        android:orientation="vertical">
+
         <TextView
             android:id="@+id/tvNumberCubes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/number_of_cubes"/>
+
         <TextView
             android:id="@+id/timeConnections"
             android:layout_width="wrap_content"
@@ -60,12 +62,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:textStyle="bold"
-        android:textSize="20sp"
         android:layout_alignParentTop="true"
         android:layout_margin="5dp"
         android:layout_toEndOf="@+id/progressBarTimer"
-        android:text="@string/score"/>
+        android:text="@string/score"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
 
     <com.mikhaellopez.circularprogressbar.CircularProgressBar
         android:id="@+id/timeCircularProgressBar"
@@ -82,35 +84,37 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/timeCircularProgressBar"
-        android:gravity="center"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:paddingEnd="20dp"
-        android:paddingStart="20dp"
-        android:orientation="horizontal">
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        android:paddingStart="16dp">
 
         <Button
             android:id="@+id/buttonStart"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="@string/start_game"
-            android:visibility="visible"
-            android:layout_width="match_parent"/>
-        <Button
-            android:id="@+id/buttonConnections"
-            android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/start_game"
+            android:visibility="visible"/>
+
+        <Button
+            android:id="@+id/buttonConnections"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/connections_button"
             android:visibility="visible"/>
 
         <!--<Button-->
-            <!--android:id="@+id/buttonSumOK"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_centerHorizontal="true"-->
-            <!--android:text="SumOK"-->
-            <!--android:visibility="visible"/>-->
+        <!--android:id="@+id/buttonSumOK"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:text="SumOK"-->
+        <!--android:visibility="visible"/>-->
     </LinearLayout>
 
     <TextView

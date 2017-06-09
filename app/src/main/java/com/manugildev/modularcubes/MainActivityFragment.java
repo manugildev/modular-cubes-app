@@ -39,6 +39,11 @@ import com.manugildev.modularcubes.network.UdpServerThread;
 import com.manugildev.modularcubes.ui.FlatColors;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -83,6 +88,9 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     int decrementTime = 300;
     int score = 0;
     public long sendTime; //DELETE
+    public long firstCubeId = 0;
+    public ArrayList<Long> currentIds = new ArrayList<>();
+    public ArrayList<Long> previousIds = new ArrayList<>();
 
     public MainActivityFragment() {
         this.fragment = this;
@@ -261,7 +269,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
         ViewGroup.LayoutParams params = gridLayout.getLayoutParams();
         float spacing = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, r.getDisplayMetrics());
-        int width = (int) (size.x - spacing * 2);
+        int width = (int) ((size.x - 100) - spacing * 2);
         int maxSize = width / 2;
         int height = d == 1 ? maxSize : (width / columnsRows.x) * columnsRows.y;
         params.width = d == 1 ? maxSize : width;
@@ -327,6 +335,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             } else {
                 light.setImageResource(activate_off);
             }
+        }
+    }
+
+    public void changeCubeDepth(int id, int depth) {
+        if (getActivity() != null && getActivity().findViewById(id) != null && id != 0) {
+            TextView depthTV = (TextView) getActivity().findViewById(id).findViewById(R.id.depthTV);
+            depthTV.setText(String.valueOf(depth));
         }
     }
 
@@ -553,4 +568,39 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         }
 
     }
+
+    public void calculateDepth(String json) throws JSONException {
+        currentIds.clear();
+        JSONArray jsonArray = new JSONArray(json);
+        for (int i = 0, size = jsonArray.length(); i < size; i++) {
+            parseArrayElement(jsonArray.getJSONObject(i), 1);
+        }
+
+        for (long element : previousIds) {
+            if (!currentIds.contains(element)) {
+                removeCube(String.valueOf(element));
+            }
+        }
+        previousIds = new ArrayList<>(currentIds);
+    }
+
+    private void parseArrayElement(JSONObject jsonObject, int depth) throws JSONException {
+        String nodeId = jsonObject.getString("nodeId");
+        JSONArray subs = jsonObject.getJSONArray("subs");
+        depth += 1;
+        for (int i = 0, size = subs.length(); i < size; i++) {
+            parseArrayElement(subs.getJSONObject(i), depth);
+        }
+        long id = Long.valueOf(nodeId);
+        if (mData.containsKey(id)) {
+            mData.get(id).setDepth(depth);
+        } else {
+            addCube(nodeId);
+            mData.get(id).setDepth(depth);
+        }
+        currentIds.add(id);
+
+    }
+
+
 }

@@ -192,7 +192,9 @@ public class UdpServerThread extends Thread {
                 @Override
                 public void run() {
                     String d = received.replace("initial=", "");
-                    fragment.updateInformation(parseJson(d));
+                    TreeMap<Long, ModularCube> modularCube = parseJson(d);
+                    fragment.firstCubeId = modularCube.firstKey();
+                    fragment.updateInformation(modularCube);
                 }
             });
             weGotSomething = true;
@@ -238,6 +240,11 @@ public class UdpServerThread extends Thread {
                 @Override
                 public void run() {
                     fragment.mTimeConnectionsTv.setText(elapsed);
+                    try {
+                        fragment.calculateDepth(received.replace("connections=", ""));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             });
         }
