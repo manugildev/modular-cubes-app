@@ -96,7 +96,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public ArrayList<Long> currentIds = new ArrayList<>();
     public ArrayList<Long> previousIds = new ArrayList<>();
     public ArrayList<Integer> soundIds = new ArrayList<>();
+    public TextView mNoCubesTV;
 
+    private Runnable myRunnable;
+    private Handler myHandler;
 
     public MainActivityFragment() {
 
@@ -111,22 +114,28 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         super.onCreate(savedInstanceState);
         this.activity = (MainActivity) getActivity();
         this.fragment = this;
-        startPollingConnections();
         startWifi();
+        startPollingConnections();
     }
 
     private void startPollingConnections() {
-        final Handler h = new Handler();
-        final int delay = 1000; //milliseconds
+        if (myHandler == null) {
+            myHandler = new Handler();
+            final int delay = 1000; //milliseconds
+            myRunnable = new Runnable() {
+                public void run() {
+                    sendTime = System.currentTimeMillis();
+                    if (udpServerThread != null) {
+                        if (activity.mData.size() == 0)
+                            udpServerThread.sendMessage("android");
+                        else udpServerThread.sendMessage("connections");
+                    }
+                    myHandler.postDelayed(this, delay);
+                }
+            };
+            myHandler.postDelayed(myRunnable, delay);
+        }
 
-        h.postDelayed(new Runnable() {
-            public void run() {
-                sendTime = System.currentTimeMillis();
-                if (udpServerThread != null)
-                    udpServerThread.sendMessage("connections");
-                h.postDelayed(this, delay);
-            }
-        }, delay);
     }
 
     @Override
@@ -139,6 +148,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mConnectionsB = (Button) rootView.findViewById(R.id.buttonConnections);
         mConnectionsB.setOnClickListener(this);
         mCircularProgressBar = (CircularProgressBar) rootView.findViewById(R.id.timeCircularProgressBar);
+        mNoCubesTV = (TextView) rootView.findViewById(R.id.noCubesTV);
         mCircularProgressBar.setScaleX(5);
         mCircularProgressBar.setScaleY(5);
         mNumberTV = (TextView) rootView.findViewById(R.id.tvNumber);
@@ -234,6 +244,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 Long key = entry.getKey();
                 ModularCube cube = entry.getValue();
+                mNoCubesTV.setVisibility(View.GONE);
                 if (!lastRefresh.containsKey(key)) {
                     createViewForCube(cube);
                     gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
@@ -328,6 +339,12 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        startPollingConnections();
+    }
+
     private Point calculateColumnsAndRows(int d) {
         int columns = (int) Math.sqrt(d);
         int rows = Math.sqrt(d) % 1 != 0 ? columns + 1 : columns;
@@ -412,14 +429,15 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             conf.SSID = "\"" + networkSSID + "\"";
             wifiManager.addNetwork(conf);
             List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
-            for (WifiConfiguration i : list) {
-                if (i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
-                    wifiManager.disconnect();
-                    wifiManager.enableNetwork(i.networkId, true);
-                    wifiManager.reconnect();
-                    break;
+            if (list != null)
+                for (WifiConfiguration i : list) {
+                    if (i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
+                        wifiManager.disconnect();
+                        wifiManager.enableNetwork(i.networkId, true);
+                        wifiManager.reconnect();
+                        break;
+                    }
                 }
-            }
             receiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
@@ -436,6 +454,9 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                                 gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
                                 startUDP();
                             }
+                        } else {
+                            System.out.println("Disconnected");
+                            mNoCubesTV.setText(R.string.noCubes);
                         }
                     }
                 }
@@ -456,6 +477,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         } catch (Exception e) {
             e.printStackTrace();
         }
+        if (myHandler != null) myHandler.removeCallbacks(myRunnable);
     }
 
     public void startUDP() {
@@ -463,9 +485,12 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             udpServerThread.setRunning(false);
             udpServerThread.interrupt();
         }
-        udpServerThread = new UdpServerThread(fragment, gateway, 8266);
-        udpServerThread.setRunning(false);
-        udpServerThread.start();
+        if (udpServerThread == null) {
+            udpServerThread = new UdpServerThread(fragment, gateway, 8266);
+            udpServerThread.setRunning(false);
+            udpServerThread.start();
+
+        }
     }
 
     @Override
@@ -473,6 +498,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         // udpServerThread.setRunning(false);
         if (mCountDownTimer != null) mCountDownTimer.cancel();
         super.onPause();
+        myHandler.removeCallbacks(myRunnable);
+        myHandler = null;
     }
 
     @Override
@@ -627,6 +654,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             }
         }
         previousIds = new ArrayList<>(currentIds);
+        refreshData();
     }
 
     private void parseArrayElement(JSONObject jsonObject, int depth) throws JSONException {

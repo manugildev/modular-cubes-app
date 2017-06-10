@@ -43,6 +43,7 @@ public class UdpServerThread extends Thread {
 
     public void setRunning(boolean running) {
         this.running = running;
+        if (socket != null) socket.close();
     }
 
     public boolean sendMessage(String message) {
@@ -56,13 +57,17 @@ public class UdpServerThread extends Thread {
             DatagramPacket send_packet;
             try {
                 send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
-                socket.send(send_packet);
-                System.out.println("Message sent " + message);
+                if (!socket.isClosed()) {
+                    socket.send(send_packet);
+                    System.out.println("Message sent " + message);
+                }
                 break;
             } catch (UnknownHostException e) {
                 e.printStackTrace();
+                setRunning(false);
             } catch (IOException e) {
                 e.printStackTrace();
+                setRunning(false);
             }
         }
         return true;
@@ -146,7 +151,8 @@ public class UdpServerThread extends Thread {
                 byte[] buf = new byte[800];
                 // receive request
                 packet = new DatagramPacket(buf, buf.length);
-                socket.receive(packet);     //this code block the program flow
+                if (!socket.isClosed()) socket.receive(packet);
+                else System.out.println("Seems to be closed...");//this code block the program flow
                 byte[] data = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
                 InetAddress address = packet.getAddress();
@@ -182,7 +188,7 @@ public class UdpServerThread extends Thread {
             } catch (InterruptedException e1) {
                 e1.printStackTrace();
             }
-            if (fragment != null) fragment.startUDP();
+            //if (fragment != null) fragment.startUDP();
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();

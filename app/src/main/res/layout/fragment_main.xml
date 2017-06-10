@@ -69,6 +69,19 @@
         android:textSize="20sp"
         android:textStyle="bold"/>
 
+    <TextView
+        android:id="@+id/noCubesTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="5dp"
+        android:layout_toEndOf="@+id/progressBarTimer"
+        android:text="@string/noCubes"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#c2c2c2"/>
+
+
     <com.mikhaellopez.circularprogressbar.CircularProgressBar
         android:id="@+id/timeCircularProgressBar"
         android:layout_width="wrap_content"

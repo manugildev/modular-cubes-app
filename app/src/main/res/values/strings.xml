@@ -8,4 +8,5 @@
     <string name="start_game">START</string>
     <string name="connections_button">Connections</string>
     <string name="score">Score: %1d</string>
+    <string name="noCubes">Not connected to CUBE_MESH</string>
 </resources>
