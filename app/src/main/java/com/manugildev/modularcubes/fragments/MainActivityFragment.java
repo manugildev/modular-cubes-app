@@ -7,13 +7,13 @@ import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.media.MediaPlayer;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.format.Formatter;
@@ -59,12 +59,11 @@ import static com.manugildev.modularcubes.R.id.gridlayout;
 
 public class MainActivityFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
+    public MainActivityFragment fragment;
     public MainActivity activity;
-
     // Modular Cubes
     TreeMap<Long, ModularCube> lastRefresh;
     GridLayout gridLayout;
-    final MainActivityFragment fragment;
 
     // UI Components
     ProgressBar progressBar;
@@ -89,24 +88,45 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     long timeLeft = 0;
     int decrementTime = 300;
     int score = 0;
-    public long sendTime; //DELETE
+
     public long firstCubeId = 0;
+    public long sendTime;
+
+
     public ArrayList<Long> currentIds = new ArrayList<>();
     public ArrayList<Long> previousIds = new ArrayList<>();
-
-    private MediaPlayer audioPlayer;
-
     public ArrayList<Integer> soundIds = new ArrayList<>();
 
+
     public MainActivityFragment() {
-        this.fragment = this;
+
+    }
+
+    public static Fragment newInstance() {
+        return new MainActivityFragment();
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activity = (MainActivity) getActivity();
+        this.activity = (MainActivity) getActivity();
+        this.fragment = this;
+        startPollingConnections();
         startWifi();
+    }
+
+    private void startPollingConnections() {
+        final Handler h = new Handler();
+        final int delay = 1000; //milliseconds
+
+        h.postDelayed(new Runnable() {
+            public void run() {
+                sendTime = System.currentTimeMillis();
+                if (udpServerThread != null)
+                    udpServerThread.sendMessage("connections");
+                h.postDelayed(this, delay);
+            }
+        }, delay);
     }
 
     @Override
@@ -126,8 +146,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mNumberTV.setScaleX(5);
         mNumberTV.setScaleY(5);
         mTimeConnectionsTv = (TextView) rootView.findViewById(R.id.timeConnections);
-        //mSumOkB = (Button) rootView.findViewById(R.id.buttonSumOK);
-        //mSumOkB.setOnClickListener(this);
         mScoreTV = (TextView) rootView.findViewById(R.id.tvScore);
         resetVariables();
 
@@ -147,7 +165,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         long seed = System.nanoTime();
         Collections.shuffle(soundIds, new Random(seed));
 
-
         return rootView;
     }
 
@@ -155,7 +172,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         activity.mData = new TreeMap<>();
-
         lastRefresh = new TreeMap<>();
         gridLayout = (GridLayout) getActivity().findViewById(gridlayout);
         gridLayout.removeAllViews();
@@ -479,7 +495,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 }
                 break;
             case R.id.buttonConnections:
-                Log.d("SendConnections", String.valueOf(System.currentTimeMillis()));
                 sendTime = System.currentTimeMillis();
                 udpServerThread.sendMessage("connections");
                 break;
@@ -557,7 +572,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         c.setDeviceId(id);
         c.setActivity(this);
         c.setCurrentOrientation(-1);
-        c.setActivated(true);
+        c.setActivated(false);
         if (activity.mData.containsKey(id)) {
             removeCube(String.valueOf(id));
         }

@@ -37,4 +37,5 @@ dependencies {
     compile 'com.android.support:support-v4:24.1.1'
     compile 'com.mikhaellopez:circularprogressbar:1.1.1'
     compile 'com.github.flepsik:progress-ring-view:1.1.2'
+    compile 'com.android.support:recyclerview-v7:24.2.1'
 }

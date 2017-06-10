@@ -2,8 +2,9 @@ package com.manugildev.modularcubes.network;
 
 import android.util.Log;
 
-import com.manugildev.modularcubes.fragments.MainActivityFragment;
+import com.manugildev.modularcubes.MainActivity;
 import com.manugildev.modularcubes.data.models.ModularCube;
+import com.manugildev.modularcubes.fragments.MainActivityFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +24,7 @@ public class UdpServerThread extends Thread {
     private static final String TAG = UdpServerThread.class.getCanonicalName();
     private final String gateway;
     private final MainActivityFragment fragment;
+    private final MainActivity activity;
     int serverPort;
     DatagramSocket socket;
     DatagramPacket packet;
@@ -34,6 +36,7 @@ public class UdpServerThread extends Thread {
     public UdpServerThread(MainActivityFragment fragment, String gateway, int serverPort) {
         super();
         this.fragment = fragment;
+        this.activity = (MainActivity) fragment.getActivity();
         this.serverPort = serverPort;
         this.gateway = gateway;
     }
@@ -149,9 +152,15 @@ public class UdpServerThread extends Thread {
                 InetAddress address = packet.getAddress();
                 int port = packet.getPort();
 
-                String received = new String(data);
+                final String received = new String(data);
                 if (fragment != null && fragment.getActivity() != null) {
                     parseReceivedData(received);
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activity.getMessagesFragment().addItem(received);
+                        }
+                    });
                 }
 
                 System.out.println(received);
