@@ -2,10 +2,11 @@ package com.manugildev.modularcubes.data.models;
 
 import android.view.View;
 
-import com.manugildev.modularcubes.MainActivityFragment;
+import com.manugildev.modularcubes.fragments.MainActivityFragment;
 
 public class ModularCube {
 
+    public final CubeAudio cubeAudio;
     private String ip;
     private long deviceId;
     private int currentOrientation;
@@ -16,7 +17,9 @@ public class ModularCube {
     private int depth;
     private long now = 0;
 
-    public ModularCube() {
+    public ModularCube(MainActivityFragment activity, int soundId) {
+        this.activity = activity;
+        this.cubeAudio = new CubeAudio(this, activity.getActivity().getApplicationContext(), soundId);
     }
 
 
@@ -49,7 +52,7 @@ public class ModularCube {
         if (this.currentOrientation != currentOrientation && activity != null && viewId != 0) {
             this.currentOrientation = currentOrientation;
             activity.changeTextInButton(this);
-
+            //cubeAudio.setPitch(currentOrientation);
         }
         this.currentOrientation = currentOrientation;
     }
@@ -57,8 +60,11 @@ public class ModularCube {
     public void setActivated(Boolean activated) {
         if (activity != null && viewId != 0 && this.activated != activated) {
             activity.changeActivatedLight(getViewId(), activated);
+            //if(activated && !cubeAudio.isPlaying()) cubeAudio.start();
+            //else cubeAudio.pause();
         }
         this.activated = activated;
+
     }
 
     public String getIp() {

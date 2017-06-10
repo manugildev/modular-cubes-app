@@ -6,7 +6,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.manugildev.modularcubes.data.models.ModularCube;
+
+import java.util.TreeMap;
+
 public class MainActivity extends AppCompatActivity {
+
+    public TreeMap<Long, ModularCube> mData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

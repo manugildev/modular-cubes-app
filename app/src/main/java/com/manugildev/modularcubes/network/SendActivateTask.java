@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import com.manugildev.modularcubes.MainActivityFragment;
+import com.manugildev.modularcubes.fragments.MainActivityFragment;
 import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.ui.ProgressBarAnimation;

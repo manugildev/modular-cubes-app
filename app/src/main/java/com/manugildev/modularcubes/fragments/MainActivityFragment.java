@@ -1,4 +1,4 @@
-package com.manugildev.modularcubes;
+package com.manugildev.modularcubes.fragments;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.media.MediaPlayer;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -34,6 +35,8 @@ import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
+import com.manugildev.modularcubes.MainActivity;
+import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.network.UdpServerThread;
 import com.manugildev.modularcubes.ui.FlatColors;
@@ -44,6 +47,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -55,11 +59,9 @@ import static com.manugildev.modularcubes.R.id.gridlayout;
 
 public class MainActivityFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-    private static final String ACTIVATE_TOPIC = "activate";
-    public static final String DATA_TOPIC = "data";
+    public MainActivity activity;
 
     // Modular Cubes
-    TreeMap<Long, ModularCube> mData;
     TreeMap<Long, ModularCube> lastRefresh;
     GridLayout gridLayout;
     final MainActivityFragment fragment;
@@ -92,6 +94,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public ArrayList<Long> currentIds = new ArrayList<>();
     public ArrayList<Long> previousIds = new ArrayList<>();
 
+    private MediaPlayer audioPlayer;
+
+    public ArrayList<Integer> soundIds = new ArrayList<>();
+
     public MainActivityFragment() {
         this.fragment = this;
     }
@@ -99,6 +105,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        activity = (MainActivity) getActivity();
         startWifi();
     }
 
@@ -123,13 +130,31 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         //mSumOkB.setOnClickListener(this);
         mScoreTV = (TextView) rootView.findViewById(R.id.tvScore);
         resetVariables();
+
+        soundIds.add(R.raw.abin);
+        soundIds.add(R.raw.bass);
+        soundIds.add(R.raw.bells);
+        soundIds.add(R.raw.chords);
+        soundIds.add(R.raw.drums);
+        soundIds.add(R.raw.melody);
+        soundIds.add(R.raw.organ);
+        soundIds.add(R.raw.piano);
+        soundIds.add(R.raw.pluks);
+        soundIds.add(R.raw.rythim);
+        soundIds.add(R.raw.trap);
+        soundIds.add(R.raw.vocal);
+
+        long seed = System.nanoTime();
+        Collections.shuffle(soundIds, new Random(seed));
+
+
         return rootView;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mData = new TreeMap<>();
+        activity.mData = new TreeMap<>();
 
         lastRefresh = new TreeMap<>();
         gridLayout = (GridLayout) getActivity().findViewById(gridlayout);
@@ -180,7 +205,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         Random r = new Random();
         int tempNumber;
         do {
-            int numberOfCubes = mData.size();
+            int numberOfCubes = activity.mData.size();
             tempNumber = r.nextInt(((numberOfCubes * 6) + 1) - numberOfCubes) + numberOfCubes;
         } while (currentNumber == tempNumber);
         currentNumber = tempNumber;
@@ -190,7 +215,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     public void refreshData() {
         if (fragment.getActivity() != null)
-            for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
+            for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 Long key = entry.getKey();
                 ModularCube cube = entry.getValue();
                 if (!lastRefresh.containsKey(key)) {
@@ -198,10 +223,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                     gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
                     animateCubeOnCreate(cube.getView());
                     refreshGridLayout();
-                    mData.put(key, cube);
+                    activity.mData.put(key, cube);
                     lastRefresh.put(key, cube);
                 } else {
-                    if (mData.get(cube.getDeviceId()).updateCube(cube)) {
+                    if (activity.mData.get(cube.getDeviceId()).updateCube(cube)) {
                         //mData.put(key, cube);
                         lastRefresh.put(key, cube);
                     }
@@ -209,7 +234,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 }
             }
         updateNumberOfCubesTextView();
-        if (mData.size() != 0)
+        if (activity.mData.size() != 0)
             checkSumOfCubes();
 
     }
@@ -217,7 +242,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     private void updateNumberOfCubesTextView() {
         try {
             Resources res = getResources();
-            String text = res.getString(R.string.number_of_cubes, mData.size() + "\n", (float) timeLeft / 1000);
+            String text = res.getString(R.string.number_of_cubes, activity.mData.size() + "\n", (float) timeLeft / 1000);
             mNumberOfCubesTV.setText(text);
         } catch (IllegalStateException e) {
             e.printStackTrace();
@@ -241,7 +266,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         FrameLayout touchFrameLayout = (FrameLayout) viewCube.findViewById(R.id.touchFrameLayaout);
         viewCube.setId(View.generateViewId());
         cube.setViewId(viewCube.getId());
-        viewCube.setBackgroundColor(FlatColors.allColors.get(mData.size() - 1));
+        viewCube.setBackgroundColor(FlatColors.allColors.get(activity.mData.size() - 1));
         textSwitcherOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
         textViewID.setText(String.valueOf(cube.getDeviceId()));
         touchFrameLayout.setOnClickListener(new View.OnClickListener() {
@@ -348,13 +373,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
         if (isChecked) {
-            for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
+            for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(false);
                 udpServerThread.sendActivate(cube);
             }
         } else {
-            for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
+            for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(true);
                 udpServerThread.sendActivate(cube);
@@ -510,7 +535,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     private void checkSumOfCubes() {
         int total = 0;
         ModularCube tempCube;
-        for (Map.Entry<Long, ModularCube> entry : mData.entrySet()) {
+        for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
             tempCube = entry.getValue();
             total += tempCube.getCurrentOrientation();
         }
@@ -527,42 +552,47 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     public void addCube(String nodeId) {
         long id = Long.valueOf(nodeId);
-        ModularCube c = new ModularCube();
+        ModularCube c = new ModularCube(fragment, fragment.getSoundId());
         c.setIp("-1");
         c.setDeviceId(id);
         c.setActivity(this);
         c.setCurrentOrientation(-1);
         c.setActivated(true);
-        if (mData.containsKey(id)) {
+        if (activity.mData.containsKey(id)) {
             removeCube(String.valueOf(id));
         }
-        mData.put(id, c);
+        activity.mData.put(id, c);
         refreshData();
     }
 
 
     public void updateInformation(TreeMap<Long, ModularCube> cubeInformation) {
-        if (cubeInformation != null)
-            if (mData.containsKey(cubeInformation.firstKey())) {
-                mData.get(cubeInformation.firstKey()).setCurrentOrientation(cubeInformation.get(cubeInformation.firstKey()).getCurrentOrientation());
-                mData.get(cubeInformation.firstKey()).setActivated(cubeInformation.get(cubeInformation.firstKey()).isActivated());
-            } else {
-                mData.put(cubeInformation.firstKey(), cubeInformation.get(cubeInformation.firstKey()));
-            }
+        if (activity.mData.containsKey(cubeInformation.firstKey())) {
+            ModularCube cube = cubeInformation.firstEntry().getValue();
+            System.out.println(cube);
+            activity.mData.get(cube.getDeviceId()).setCurrentOrientation(cube.getCurrentOrientation());
+            activity.mData.get(cube.getDeviceId()).setActivated(cube.isActivated());
+            handleMusic(cube);
+        } else {
+            activity.mData.put(cubeInformation.firstKey(), cubeInformation.get(cubeInformation.firstKey()));
+        }
         refreshData();
+    }
 
+    private void handleMusic(ModularCube cube) {
     }
 
     public void removeCube(String nodeId) {
         long id = Long.valueOf(nodeId);
-        if (mData.get(id) != null) {
-            View namebar = gridLayout.findViewById(mData.get(id).getViewId());
+        if (activity.mData.get(id) != null) {
+            View namebar = gridLayout.findViewById(activity.mData.get(id).getViewId());
             if (namebar != null) {
                 ViewGroup parent = (ViewGroup) namebar.getParent();
                 if (parent != null) parent.removeView(namebar);
 
             }
-            mData.remove(id);
+            activity.mData.get(id).cubeAudio.stop();
+            activity.mData.remove(id);
             lastRefresh.remove(id);
             refreshGridLayout();
         }
@@ -592,14 +622,21 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             parseArrayElement(subs.getJSONObject(i), depth);
         }
         long id = Long.valueOf(nodeId);
-        if (mData.containsKey(id)) {
-            mData.get(id).setDepth(depth);
+        if (activity.mData.containsKey(id)) {
+            activity.mData.get(id).setDepth(depth);
         } else {
             addCube(nodeId);
-            mData.get(id).setDepth(depth);
+            activity.mData.get(id).setDepth(depth);
         }
         currentIds.add(id);
 
+    }
+
+    public int getSoundId() {
+        int sID = soundIds.get(0);
+        soundIds.remove(0);
+        soundIds.add(sID);
+        return sID;
     }
 
 

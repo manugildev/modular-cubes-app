@@ -3,7 +3,7 @@ package com.manugildev.modularcubes.network;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.manugildev.modularcubes.MainActivityFragment;
+import com.manugildev.modularcubes.fragments.MainActivityFragment;
 import com.manugildev.modularcubes.data.models.ModularCube;
 
 import org.json.JSONException;
@@ -77,7 +77,7 @@ public class FetchDataTask extends AsyncTask<String, Void, TreeMap<Long, Modular
         while (iter.hasNext()) {
             String key = iter.next();
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
-            ModularCube c = new ModularCube();
+            ModularCube c = new ModularCube(fragment, fragment.getSoundId());
             c.setIp(key);
             c.setDeviceId(Long.valueOf(key));
             c.setCurrentOrientation(cubeJson.getInt("cO"));

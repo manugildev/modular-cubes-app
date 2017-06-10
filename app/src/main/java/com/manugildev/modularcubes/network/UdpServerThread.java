@@ -2,7 +2,7 @@ package com.manugildev.modularcubes.network;
 
 import android.util.Log;
 
-import com.manugildev.modularcubes.MainActivityFragment;
+import com.manugildev.modularcubes.fragments.MainActivityFragment;
 import com.manugildev.modularcubes.data.models.ModularCube;
 
 import org.json.JSONArray;
@@ -113,7 +113,7 @@ public class UdpServerThread extends Thread {
         while (iter.hasNext()) {
             String key = iter.next();
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
-            ModularCube c = new ModularCube();
+            ModularCube c = new ModularCube(fragment, fragment.getSoundId());
             c.setIp(key);
             c.setActivity(fragment);
             c.setDeviceId(Long.valueOf(key));
