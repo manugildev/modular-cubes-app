@@ -68,6 +68,12 @@ public class UdpServerThread extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
                 setRunning(false);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                       fragment.setDisconnected();
+                    }
+                });
             }
         }
         return true;

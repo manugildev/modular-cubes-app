@@ -244,6 +244,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 Long key = entry.getKey();
                 ModularCube cube = entry.getValue();
+
+                gridLayout.setVisibility(View.VISIBLE);
                 mNoCubesTV.setVisibility(View.GONE);
                 if (!lastRefresh.containsKey(key)) {
                     createViewForCube(cube);
@@ -455,8 +457,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                                 startUDP();
                             }
                         } else {
-                            System.out.println("Disconnected");
-                            mNoCubesTV.setText(R.string.noCubes);
+                            setDisconnected();
                         }
                     }
                 }
@@ -683,4 +684,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
 
+    public void setDisconnected() {
+        System.out.println("Disconnected");
+        mNoCubesTV.setVisibility(View.VISIBLE);
+        gridLayout.setVisibility(View.GONE);
+        udpServerThread = null;
+    }
 }
