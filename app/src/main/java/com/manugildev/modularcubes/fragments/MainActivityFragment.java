@@ -7,10 +7,14 @@ import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -38,7 +42,7 @@ import android.widget.ViewSwitcher;
 import com.manugildev.modularcubes.MainActivity;
 import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.data.models.ModularCube;
-import com.manugildev.modularcubes.network.UdpServerThread;
+import com.manugildev.modularcubes.network.TCPServerThread;
 import com.manugildev.modularcubes.ui.FlatColors;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
@@ -47,12 +51,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+import static android.content.Context.AUDIO_SERVICE;
 import static com.manugildev.modularcubes.R.drawable.activate_off;
 import static com.manugildev.modularcubes.R.drawable.activate_on;
 import static com.manugildev.modularcubes.R.id.gridlayout;
@@ -79,11 +84,11 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     WifiManager wifiManager;
     String gateway;
     String networkSSID = "CUBES_MESH";
-    UdpServerThread udpServerThread;
+    TCPServerThread TCPServerThread;
 
     //GameLogic Variables
     int currentNumber = 0;
-    int currentTime = 5000;
+    int currentTime = 50000;
     int minimumTime = 2000;
     long timeLeft = 0;
     int decrementTime = 300;
@@ -100,6 +105,27 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     private Runnable myRunnable;
     private Handler myHandler;
+    private Handler myHandler2;
+    private Runnable myRunnable2;
+
+    ArrayList<Long> cubesSequence;
+    boolean playing = false;
+    long currentCube = 0;
+
+
+    // Sound Stuff
+
+    private SoundPool soundPool;
+    private AudioManager audioManager;
+    // Maximumn sound stream.
+    private static final int MAX_STREAMS = 5;
+    // Stream type.
+    private static final int streamType = AudioManager.STREAM_MUSIC;
+    private boolean loaded;
+    private int positveSound;
+    private int negativeSound;
+    private int endSound;
+    private float volume;
 
     public MainActivityFragment() {
 
@@ -118,6 +144,24 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         startPollingConnections();
     }
 
+    private void sendActivateToAll(final boolean b) {
+        if (myHandler2 == null) {
+            myHandler2 = new Handler();
+            final int delay = 10; //milliseconds
+            myRunnable2 = new Runnable() {
+                public void run() {
+                    sendTime = System.currentTimeMillis();
+                    for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
+                        final ModularCube cube = entry.getValue();
+                        cube.setActivated(false);
+                        TCPServerThread.sendActivate(cube, b);
+                    }
+                }
+            };
+            myHandler2.postDelayed(myRunnable2, delay);
+        }
+    }
+
     private void startPollingConnections() {
         if (myHandler == null) {
             myHandler = new Handler();
@@ -125,10 +169,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             myRunnable = new Runnable() {
                 public void run() {
                     sendTime = System.currentTimeMillis();
-                    if (udpServerThread != null) {
+                    if (TCPServerThread != null) {
                         if (activity.mData.size() == 0)
-                            udpServerThread.sendMessage("android");
-                        else udpServerThread.sendMessage("connections");
+                            TCPServerThread.sendMessage("android");
+                        else TCPServerThread.sendMessage("connections");
                     }
                     myHandler.postDelayed(this, delay);
                 }
@@ -158,23 +202,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mTimeConnectionsTv = (TextView) rootView.findViewById(R.id.timeConnections);
         mScoreTV = (TextView) rootView.findViewById(R.id.tvScore);
         resetVariables();
-
-        soundIds.add(R.raw.abin);
-        soundIds.add(R.raw.bass);
-        soundIds.add(R.raw.bells);
-        soundIds.add(R.raw.chords);
-        soundIds.add(R.raw.drums);
-        soundIds.add(R.raw.melody);
-        soundIds.add(R.raw.organ);
-        soundIds.add(R.raw.piano);
-        soundIds.add(R.raw.pluks);
-        soundIds.add(R.raw.rythim);
-        soundIds.add(R.raw.trap);
-        soundIds.add(R.raw.vocal);
-
-        long seed = System.nanoTime();
-        Collections.shuffle(soundIds, new Random(seed));
-
         return rootView;
     }
 
@@ -187,11 +214,85 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         gridLayout.removeAllViews();
         gridLayout.setAlpha(1);
         refreshData();
+        musicStuff();
+
+    }
+
+    private void musicStuff() {
+        // AudioManager audio settings for adjusting the volume
+        audioManager = (AudioManager) activity.getSystemService(AUDIO_SERVICE);
+        // Current volumn Index of particular stream type.
+        float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
+        // Get the maximum volume index for a particular stream type.
+        float maxVolumeIndex = (float) audioManager.getStreamMaxVolume(streamType);
+        // Volumn (0 --> 1)
+        this.volume = currentVolumeIndex / maxVolumeIndex;
+        // Suggests an audio stream whose volume should be changed by
+        // the hardware volume controls.
+        activity.setVolumeControlStream(streamType);
+        // For Android SDK >= 21
+        if (Build.VERSION.SDK_INT >= 21) {
+            AudioAttributes audioAttrib = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+
+            SoundPool.Builder builder = new SoundPool.Builder();
+            builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
+            this.soundPool = builder.build();
+        }
+        // for Android SDK < 21
+        else {
+            // SoundPool(int maxStreams, int streamType, int srcQuality)
+            this.soundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0);
+        }
+        // When Sound Pool load complete.
+        this.soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                loaded = true;
+            }
+        });
+
+        // Load sound file (destroy.wav) into SoundPool.
+        this.positveSound = this.soundPool.load(activity, R.raw.positive, 1);
+        // Load sound file (gun.wav) into SoundPool.
+        this.negativeSound = this.soundPool.load(activity, R.raw.negative, 1);
+        // Load sound file (gun.wav) into SoundPool.
+        this.endSound = this.soundPool.load(activity, R.raw.end, 1);
+    }
+
+    public void playPositveSound() {
+        if (loaded) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+            // Play sound of gunfire. Returns the ID of the new stream.
+            int streamId = this.soundPool.play(this.negativeSound, leftVolumn, rightVolumn, 1, 0, 1f);
+        }
+    }
+
+    public void playEndSound() {
+        if (loaded) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+            // Play sound of gunfire. Returns the ID of the new stream.
+            int streamId = this.soundPool.play(this.endSound, leftVolumn, rightVolumn, 1, 0, 1f);
+        }
+    }
+
+    public void playNegativeSound() {
+        if (loaded) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+
+            // Play sound objects destroyed. Returns the ID of the new stream.
+            int streamId = this.soundPool.play(this.positveSound, leftVolumn, rightVolumn, 1, 0, 1f);
+        }
     }
 
     public void startTimer(final int milliseconds) {
         final float[] i = {0};
-        generateRandomNumber();
+        //generateRandomNumber();
         mCircularProgressBar.setProgressWithAnimation(100, 250);
         mAnimationCountDownTimer = new CountDownTimer(250, 1) {
             @Override
@@ -235,7 +336,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             tempNumber = r.nextInt(((numberOfCubes * 6) + 1) - numberOfCubes) + numberOfCubes;
         } while (currentNumber == tempNumber);
         currentNumber = tempNumber;
-        mNumberTV.setText(currentNumber + "");
+        //mNumberTV.setText(currentNumber + "");
 
     }
 
@@ -263,8 +364,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 }
             }
         updateNumberOfCubesTextView();
-        if (activity.mData.size() != 0)
-            checkSumOfCubes();
+        //if (activity.mData.size() != 0)
+        //checkSumOfCubes();
 
     }
 
@@ -273,6 +374,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             Resources res = getResources();
             String text = res.getString(R.string.number_of_cubes, activity.mData.size() + "\n", (float) timeLeft / 1000);
             mNumberOfCubesTV.setText(text);
+            mNumberTV.setText(String.valueOf((float) timeLeft / 1000));
         } catch (IllegalStateException e) {
             e.printStackTrace();
         }
@@ -301,7 +403,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         touchFrameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                udpServerThread.sendActivate(cube);
+                TCPServerThread.sendActivate(cube);
             }
         });
         ImageView imageViewLight = (ImageView) viewCube.findViewById(R.id.imageViewLight);
@@ -411,13 +513,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(false);
-                udpServerThread.sendActivate(cube);
+                TCPServerThread.sendActivate(cube);
             }
         } else {
             for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
                 final ModularCube cube = entry.getValue();
                 cube.setActivated(true);
-                udpServerThread.sendActivate(cube);
+                TCPServerThread.sendActivate(cube);
             }
         }
 
@@ -482,21 +584,21 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     public void startUDP() {
-        if (udpServerThread != null) {
-            udpServerThread.setRunning(false);
-            udpServerThread.interrupt();
+        if (TCPServerThread != null) {
+            TCPServerThread.setRunning(false);
+            TCPServerThread.interrupt();
         }
-        if (udpServerThread == null) {
-            udpServerThread = new UdpServerThread(fragment, gateway, 8266);
-            udpServerThread.setRunning(false);
-            udpServerThread.start();
-
+        if (TCPServerThread == null) {
+            TCPServerThread = new TCPServerThread(fragment, gateway, 8266);
+            TCPServerThread.setRunning(false);
+            TCPServerThread.start();
         }
     }
 
+
     @Override
     public void onPause() {
-        // udpServerThread.setRunning(false);
+        // TCPServerThread.setRunning(false);
         if (mCountDownTimer != null) mCountDownTimer.cancel();
         super.onPause();
         myHandler.removeCallbacks(myRunnable);
@@ -506,7 +608,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public void onDestroy() {
         if (mCountDownTimer != null) mCountDownTimer.cancel();
-        if (udpServerThread != null) udpServerThread.setRunning(false);
+        if (TCPServerThread != null) TCPServerThread.setRunning(false);
         super.onDestroy();
     }
 
@@ -515,20 +617,89 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         switch (view.getId()) {
             case R.id.buttonStart:
                 if (mStartB.getText().equals("START")) {
-                    startGame();
+                    startGameA();
+                    //TCPServerThread.sendMessage("all=start");
                     mStartB.setText("PAUSE");
                 } else {
-                    pauseGame();
+                    pauseGameA();
+                    //TCPServerThread.sendMessage("all=stop");
                     mStartB.setText("START");
                 }
                 break;
             case R.id.buttonConnections:
-                sendTime = System.currentTimeMillis();
-                udpServerThread.sendMessage("connections");
+                //sendTime = System.currentTimeMillis();
+                sendActivateToAll(true);
+                //TCPServerThread.sendMessage("connections");
                 break;
         }
 
     }
+
+
+    private void startGameA() {
+        gridLayout.animate().scaleX(0).scaleY(0).setDuration(300);
+        mNumberTV.setScaleX(0);
+        mNumberTV.setScaleY(0);
+        mCircularProgressBar.animate().scaleX(1).scaleY(1).setDuration(500);
+        mNumberTV.animate().scaleX(1).scaleY(1).setDuration(500).setStartDelay(300);
+        mNumberTV.animate().alpha(1).setDuration(500).setStartDelay(300);
+
+
+        //TCPServerThread.sendMessage("all=stop");
+        /*for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
+            try {
+                Thread.sleep(0);
+                TCPServerThread.sendActivate(entry.getValue(), true);
+                Thread.sleep(500);
+                TCPServerThread.sendActivate(entry.getValue(), false);
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (int i = 0; i < 4; i++) {
+            try {
+                TCPServerThread.sendMessage("all=stop");
+                Thread.sleep(500);
+                TCPServerThread.sendMessage("all=start");
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }*/
+        TCPServerThread.sendMessage("all=stop");
+
+        resetVariables();
+        activateNext();
+        startTimer(currentTime);
+    }
+
+    public void activateNext() {
+        System.out.println("ACTIVATENEXT");
+        mNumberTV.setText(String.valueOf(cubesSequence.size()));
+        if (cubesSequence.size() != 0) {
+            playPositveSound();
+            currentCube = cubesSequence.get(0);
+            TCPServerThread.sendActivate(activity.mData.get(currentCube), true);
+            cubesSequence.remove(0);
+        } else {
+            playEndSound();
+            pauseGameA();
+        }
+
+    }
+
+    private void pauseGameA() {
+        gridLayout.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay(300).setStartDelay(300);
+        mCircularProgressBar.animate().scaleX(5).scaleY(5).setDuration(300);
+        mNumberTV.animate().scaleX(0).scaleY(0).setDuration(300);
+        mNumberTV.animate().alpha(0).setDuration(300);
+        mCountDownTimer.cancel();
+        playing = false;
+        mStartB.setText("START");
+    }
+
 
     private void startGame() {
         resetVariables();
@@ -542,10 +713,40 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     private void resetVariables() {
+        playing = true;
         currentNumber = 0;
-        currentTime = 5000;
+        currentTime = 50000;
         timeLeft = 0;
         changeScore(0);
+
+        ArrayList<Long> ids = new ArrayList<Long>();
+        ids.clear();
+        if (activity.mData != null && activity.mData.size() != 0) {
+            for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
+                ids.add(entry.getKey());
+            }
+
+            int[] numbers = new int[10];
+            for (int i = 0; i < numbers.length; i++) {
+
+                numbers[i] = (int) ((Math.random() * ids.size()));
+                if (i != 0) {
+                    while (numbers[i] == numbers[i - 1]) {
+                        numbers[i] = (int) ((Math.random() * ids.size()));
+                    }
+                }
+
+            }
+            System.out.println("Numbers Generated: " + Arrays.toString(numbers));
+
+            cubesSequence = new ArrayList<Long>();
+            cubesSequence.clear();
+            for (int i = 0; i < numbers.length; i++) {
+                cubesSequence.add(ids.get(numbers[i]));
+            }
+            System.out.println("Numbers Generated: " + cubesSequence.toString());
+
+        }
     }
 
     private void pauseGame() {
@@ -595,7 +796,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     public void addCube(String nodeId) {
         long id = Long.valueOf(nodeId);
-        ModularCube c = new ModularCube(fragment, fragment.getSoundId());
+        ModularCube c = new ModularCube(fragment);
         c.setIp("-1");
         c.setDeviceId(id);
         c.setActivity(this);
@@ -610,20 +811,32 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
 
     public void updateInformation(TreeMap<Long, ModularCube> cubeInformation) {
+        if (playing) {
+            if (cubeInformation.firstKey() == currentCube) {
+                if (cubeInformation.get(currentCube).getCurrentOrientation() !=
+                        activity.mData.get(currentCube).getCurrentOrientation()) {
+                    TCPServerThread.sendActivate(activity.mData.get(currentCube), false);
+                    activateNext();
+                    System.out.println("CubeGame: " + currentCube);
+                }
+            } else {
+                playNegativeSound();
+            }
+
+        }
+
+
         if (activity.mData.containsKey(cubeInformation.firstKey())) {
             ModularCube cube = cubeInformation.firstEntry().getValue();
             System.out.println(cube);
             activity.mData.get(cube.getDeviceId()).setCurrentOrientation(cube.getCurrentOrientation());
             activity.mData.get(cube.getDeviceId()).setActivated(cube.isActivated());
-            handleMusic(cube);
         } else {
             activity.mData.put(cubeInformation.firstKey(), cubeInformation.get(cubeInformation.firstKey()));
         }
         refreshData();
     }
 
-    private void handleMusic(ModularCube cube) {
-    }
 
     public void removeCube(String nodeId) {
         long id = Long.valueOf(nodeId);
@@ -634,7 +847,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 if (parent != null) parent.removeView(namebar);
 
             }
-            activity.mData.get(id).cubeAudio.stop();
+            //activity.mData.get(id).cubeAudio.stop();
             activity.mData.remove(id);
             lastRefresh.remove(id);
             refreshGridLayout();
@@ -676,18 +889,19 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
     }
 
-    public int getSoundId() {
-        int sID = soundIds.get(0);
-        soundIds.remove(0);
-        soundIds.add(sID);
-        return sID;
-    }
-
 
     public void setDisconnected() {
         System.out.println("Disconnected");
         mNoCubesTV.setVisibility(View.VISIBLE);
         gridLayout.setVisibility(View.GONE);
-        udpServerThread = null;
+        TCPServerThread = null;
+    }
+
+    public TCPServerThread getTCPServerThread() {
+        return TCPServerThread;
+    }
+
+    public void sendMessage(String s) {
+        TCPServerThread.sendMessage(s);
     }
 }

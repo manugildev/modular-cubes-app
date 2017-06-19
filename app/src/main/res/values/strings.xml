@@ -9,4 +9,5 @@
     <string name="connections_button">Connections</string>
     <string name="score">Score: %1d</string>
     <string name="noCubes">Not connected to CUBE_MESH</string>
+    <string name="switchonall">SwitchOnAll</string>
 </resources>

@@ -209,7 +209,7 @@ public class MQTTHandler implements MqttCallback {
         while (iter.hasNext()) {
             String key = iter.next();
             JSONObject cubeJson = lastValueJson.getJSONObject(key);
-            ModularCube c = new ModularCube(fragment, fragment.getSoundId());
+            ModularCube c = new ModularCube(fragment);
             c.setIp(key);
             c.setDeviceId(Long.valueOf(key));
             c.setCurrentOrientation(cubeJson.getInt("cO"));

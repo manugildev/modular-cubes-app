@@ -6,7 +6,6 @@ import com.manugildev.modularcubes.fragments.MainActivityFragment;
 
 public class ModularCube {
 
-    public final CubeAudio cubeAudio;
     private String ip;
     private long deviceId;
     private int currentOrientation;
@@ -17,9 +16,9 @@ public class ModularCube {
     private int depth;
     private long now = 0;
 
-    public ModularCube(MainActivityFragment activity, int soundId) {
+    public ModularCube(MainActivityFragment activity) {
         this.activity = activity;
-        this.cubeAudio = new CubeAudio(this, activity.getActivity().getApplicationContext(), soundId);
+        //this.cubeAudio = new CubeAudio(this, activity.getActivity().getApplicationContext(), soundId);
     }
 
 

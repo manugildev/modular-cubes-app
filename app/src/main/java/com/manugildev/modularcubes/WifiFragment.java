@@ -17,7 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.manugildev.modularcubes.network.UdpServerThread;
+import com.manugildev.modularcubes.network.TCPServerThread;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class WifiFragment extends Fragment {
     WifiManager wifiManager;
     private Button button;
     private String gateway;
-    private UdpServerThread udpServerThread;
+    private TCPServerThread TCPServerThread;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -94,7 +94,7 @@ public class WifiFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                udpServerThread.sendMessage("Manuel? Android");
+                TCPServerThread.sendMessage("Manuel? Android");
             }
         });
         return rootView;

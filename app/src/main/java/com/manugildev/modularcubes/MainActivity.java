@@ -17,7 +17,7 @@ import com.manugildev.modularcubes.fragments.SecondFragment;
 
 import java.util.TreeMap;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
     FragmentPagerAdapter adapterViewPager;
     public TreeMap<Long, ModularCube> mData;
 
@@ -58,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
 
     public MessageFragment getMessagesFragment() {
         return (MessageFragment) adapterViewPager.getItem(0);
+    }
+
+    public MainActivityFragment getMainFragment() {
+        return (MainActivityFragment) adapterViewPager.getItem(1);
     }
 
     public static class MyPagerAdapter extends FragmentPagerAdapter {
