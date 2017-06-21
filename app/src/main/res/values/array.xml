@@ -116,7 +116,6 @@
         <item name="indigo_500" type="color">#3f51b5</item>
         <item name="light_blue_500" type="color">#03a9f4</item>
         <item name="light_green_500" type="color">#8bc34a</item>
-        <item name="yellow_500" type="color">#ffeb3b</item>
         <item name="lime_500" type="color">#cddc39</item>
     </array>
     <array name="mdcolor_600">

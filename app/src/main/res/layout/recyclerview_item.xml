@@ -1,19 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.manugildev.modularcubes.ui.second.SquareLayaout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="100dp"
     android:layout_margin="4dp"
     android:backgroundTint="@color/md_grey_50"
     android:clickable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    app:cardCornerRadius="10dp">
+
+    <com.mikhaellopez.circularprogressbar.CircularProgressBar
+        android:id="@+id/cubeProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="10dp"
+        app:cpb_background_progressbar_color="#66385cfd"
+        app:cpb_background_progressbar_width="15dp"
+        app:cpb_progress="0"
+        app:cpb_progressbar_color="#385cfd"
+        app:cpb_progressbar_width="15dp"/>
 
     <TextView
         android:id="@+id/info_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:textColor="@color/md_pink_300"/>
+        android:textColor="@color/md_pink_300"
+        android:visibility="gone"/>
 
 </com.manugildev.modularcubes.ui.second.SquareLayaout>

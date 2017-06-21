@@ -1,6 +1,8 @@
 package com.manugildev.modularcubes.ui.second;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.support.v4.graphics.ColorUtils;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +11,7 @@ import android.widget.TextView;
 
 import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.data.models.ModularCube;
+import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.ArrayList;
 
@@ -17,11 +20,13 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private ArrayList<ModularCube> mData = new ArrayList<>();
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private Context context;
 
     // data is passed into the constructor
     public MyRecyclerViewAdapter(Context context, ArrayList<ModularCube> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
+        this.context = context;
     }
 
     // inflates the cell layout from xml when needed
@@ -37,6 +42,8 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     public void onBindViewHolder(ViewHolder holder, int position) {
         long id = mData.get(position).getDeviceId();
         holder.myTextView.setText(String.valueOf(id));
+        holder.cubeProgressBar.setColor(Color.parseColor(mData.get(position).getColor()));
+        holder.cubeProgressBar.setBackgroundColor(ColorUtils.setAlphaComponent(Color.parseColor(mData.get(position).getColor()), 60));
     }
 
     // total number of cells
@@ -72,10 +79,12 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView myTextView;
+        public CircularProgressBar cubeProgressBar;
 
         public ViewHolder(View itemView) {
             super(itemView);
             myTextView = (TextView) itemView.findViewById(R.id.info_text);
+            cubeProgressBar = (CircularProgressBar) itemView.findViewById(R.id.cubeProgressBar);
             itemView.setOnClickListener(this);
         }
 

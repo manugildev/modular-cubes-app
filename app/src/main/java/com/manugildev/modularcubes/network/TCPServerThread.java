@@ -210,10 +210,11 @@ public class TCPServerThread extends Thread {
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    fragment.firstCubeId = 0;
                     String d = received.replace("initial=", "");
                     TreeMap<Long, ModularCube> modularCube = parseJson(d);
                     fragment.firstCubeId = modularCube.firstKey();
-                    fragment.updateInformation(modularCube);
+                    fragment.updateInformation(parseJson(d));
                 }
             });
             weGotSomething = true;

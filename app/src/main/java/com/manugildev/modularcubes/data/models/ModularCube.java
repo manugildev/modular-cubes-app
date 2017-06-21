@@ -15,6 +15,7 @@ public class ModularCube {
     private int viewId;
     private int depth;
     private long now = 0;
+    private String color;
 
     public ModularCube(MainActivityFragment activity) {
         this.activity = activity;
@@ -119,5 +120,13 @@ public class ModularCube {
             activity.changeCubeDepth(getViewId(), depth);
         }
         this.depth = depth;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+    
+    public String getColor(){
+        return this.color;
     }
 }

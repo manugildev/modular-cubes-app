@@ -29,6 +29,7 @@ import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.ui.FlatColors;
 import com.manugildev.modularcubes.ui.second.MyRecyclerViewAdapter;
+import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -387,8 +388,11 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
                         //sendActivate(currentCube, false);
                         playPositiveSound();
                         addScore(1);
+                        View itemView = recyclerView.findViewHolderForAdapterPosition(adapter.getCubeIndexById(currentCube)).itemView;
                         YoYo.with(Techniques.Pulse).duration(600)
-                                .playOn(recyclerView.findViewHolderForAdapterPosition(adapter.getCubeIndexById(currentCube)).itemView);
+                                .playOn(itemView);
+                        CircularProgressBar c = (CircularProgressBar) itemView.findViewById(R.id.cubeProgressBar);
+                        runProgressBarAnimation(c);
                         correctMovement();
                     }
                 } else {
@@ -400,6 +404,26 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
                     }
                 }
             }
+    }
+
+    private void runProgressBarAnimation(CircularProgressBar c) {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    activity.runOnUiThread(() -> {
+                        c.setProgressWithAnimation(100, 80);
+                    });
+                    sleep(800);
+                    activity.runOnUiThread(() -> {
+                        c.setProgressWithAnimation(0, 200);
+                    });
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
     }
 
     public void addCube(ModularCube cube) {

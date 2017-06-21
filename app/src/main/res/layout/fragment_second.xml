@@ -10,17 +10,12 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="top">
+
             <TextView
                 android:id="@+id/scoreTextView"
-                android:layout_width="match_parent"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
+                android:layout_gravity="left"
                 android:hyphenationFrequency="none"
                 android:padding="16dp"
                 android:shadowColor="@color/md_black_1000"
@@ -32,12 +27,12 @@
                 android:textColor="@color/md_grey_50"
                 android:textSize="20sp"
                 android:textStyle="bold|italic"/>
+
             <TextView
                 android:id="@+id/highScoreTextView"
-                android:layout_width="match_parent"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
+                android:layout_gravity="right"
                 android:hyphenationFrequency="none"
                 android:padding="16dp"
                 android:shadowColor="@color/md_black_1000"
@@ -50,8 +45,6 @@
                 android:textSize="20sp"
                 android:textStyle="bold|italic"/>
 
-        </LinearLayout>
-
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/rvNumbers"
@@ -62,7 +55,6 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:layout_marginTop="16dp"
-
             android:overScrollMode="never"/>
 
         <Button

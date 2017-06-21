@@ -22,6 +22,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.util.TypedValue;
@@ -36,6 +37,7 @@ import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
@@ -106,7 +108,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public ArrayList<Long> currentIds = new ArrayList<>();
     public ArrayList<Long> previousIds = new ArrayList<>();
     public ArrayList<Integer> soundIds = new ArrayList<>();
-    public TextView mNoCubesTV;
+    public LinearLayout mNoCubesTV;
 
     private Runnable myRunnable;
     private Handler myHandler;
@@ -188,8 +190,11 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                                     TCPServerThread.sendMessage("connections");
                                     delay = 300;
                                 } else
-                                    activity.runOnUiThread(() -> {
-                                        setDisconnected();
+                                    activity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            setDisconnected();
+                                        }
                                     });
 
                             }
@@ -217,7 +222,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mOFFB = (Button) rootView.findViewById(R.id.buttonOFF);
         mOFFB.setOnClickListener(this);
         mCircularProgressBar = (CircularProgressBar) rootView.findViewById(R.id.timeCircularProgressBar);
-        mNoCubesTV = (TextView) rootView.findViewById(R.id.noCubesTV);
+        mNoCubesTV = (LinearLayout) rootView.findViewById(R.id.noCubesLL);
         mCircularProgressBar.setScaleX(5);
         mCircularProgressBar.setScaleY(5);
         mNumberTV = (TextView) rootView.findViewById(R.id.tvNumber);
@@ -440,7 +445,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         FrameLayout touchFrameLayout = (FrameLayout) viewCube.findViewById(R.id.touchFrameLayaout);
         viewCube.setId(View.generateViewId());
         cube.setViewId(viewCube.getId());
-        viewCube.setBackgroundColor(getMatColor("500"));
+        String cubeColor = getMatColor("500");
+        CardView cardView = (CardView) viewCube.findViewById(R.id.cardView);
+        cardView.setCardBackgroundColor(Color.parseColor(cubeColor));
+        cube.setColor(cubeColor);
         textSwitcherOrientation.setText(String.valueOf(cube.getCurrentOrientation()));
         textViewID.setText(String.valueOf(cube.getDeviceId()));
         touchFrameLayout.setOnClickListener(new View.OnClickListener() {
@@ -569,7 +577,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     private void startWifi() {
-        wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = wifiManager.getConnectionInfo();
         if (!info.getSSID().contains(networkSSID)) {
             WifiConfiguration conf = new WifiConfiguration();
@@ -901,8 +909,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public void removeCube(String nodeId) {
         mCallback.communicateToFragment2();
         long id = Long.valueOf(nodeId);
-        mCallback.removeItem(activity.mData.get(id));
         if (activity.mData.get(id) != null) {
+            mCallback.removeItem(activity.mData.get(id));
             View namebar = gridLayout.findViewById(activity.mData.get(id).getViewId());
             if (namebar != null) {
                 ViewGroup parent = (ViewGroup) namebar.getParent();
@@ -981,13 +989,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         TCPServerThread.sendActivate(activity.mData.get(currentCube), b);
     }
 
-    private int getMatColor(String typeColor) {
-        int returnColor = Color.BLACK;
+    private String getMatColor(String typeColor) {
+        String returnColor = "#FFFFFFF";
         int arrayId = getResources().getIdentifier("mdcolor_" + typeColor, "array", activity.getApplicationContext().getPackageName());
         if (arrayId != 0) {
             TypedArray colors = getResources().obtainTypedArray(arrayId);
             //int index = (int) (Math.random() * colors.length());
-            returnColor = colors.getColor(generalColorIndex, Color.BLACK);
+            returnColor = colors.getString(generalColorIndex);
             generalColorIndex++;
             if (generalColorIndex == colors.length() - 1) generalColorIndex = 0;
             colors.recycle();
