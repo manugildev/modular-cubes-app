@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.manugildev.modularcubes.ui.second.SquareLayaout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:layout_margin="4dp"
+    android:backgroundTint="@color/md_grey_50"
+    android:clickable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/info_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textColor="@color/md_pink_300"/>
+
+</com.manugildev.modularcubes.ui.second.SquareLayaout>

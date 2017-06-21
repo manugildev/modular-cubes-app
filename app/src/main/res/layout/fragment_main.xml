@@ -107,6 +107,7 @@
 
         <Button
             android:id="@+id/buttonStart"
+            android:textColor="#FFFFFF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -114,11 +115,21 @@
             android:visibility="visible"/>
 
         <Button
-            android:id="@+id/buttonConnections"
+            android:id="@+id/buttonON"
+            android:textColor="#FFFFFF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/connections_button"
+            android:text="@string/start_all"
+            android:visibility="visible"/>
+
+        <Button
+            android:id="@+id/buttonOFF"
+            android:textColor="#FFFFFF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/stop_all"
             android:visibility="visible"/>
 
         <!--<Button-->

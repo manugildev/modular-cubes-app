@@ -69,8 +69,10 @@ public class MessageFragment extends Fragment {
     }
 
     public void addItem(String received) {
-        mAdapter.addItem(received);
-        recyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
+        if (mAdapter != null) {
+            mAdapter.addItem(received);
+            recyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
+        }
 
     }
 

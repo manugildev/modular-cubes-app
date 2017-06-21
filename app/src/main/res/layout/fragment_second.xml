@@ -1,16 +1,117 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="16dp"
+                android:layout_gravity="center"
+                android:background="@color/colorAccent"
                 tools:context="com.manugildev.modularcubes.fragments.SecondFragment">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="top">
+            <TextView
+                android:id="@+id/scoreTextView"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hyphenationFrequency="none"
+                android:padding="16dp"
+                android:shadowColor="@color/md_black_1000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="2"
+                android:text="Score: "
+                android:textAlignment="gravity"
+                android:textColor="@color/md_grey_50"
+                android:textSize="20sp"
+                android:textStyle="bold|italic"/>
+            <TextView
+                android:id="@+id/highScoreTextView"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hyphenationFrequency="none"
+                android:padding="16dp"
+                android:shadowColor="@color/md_black_1000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="2"
+                android:text="Highscore: "
+                android:textAlignment="gravity"
+                android:textColor="@color/md_grey_50"
+                android:textSize="20sp"
+                android:textStyle="bold|italic"/>
 
-    <ToggleButton
-        android:id="@+id/turnAllB"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="@string/switchonall"/>
+        </LinearLayout>
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rvNumbers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="16dp"
+
+            android:overScrollMode="never"/>
+
+        <Button
+            android:id="@+id/testButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="16dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="Start Simon Says"
+            android:textColor="#FFFFFF"/>
+
+        <FrameLayout
+            android:id="@+id/textViewFrame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:background="@color/colorAccent">
+
+            <TextView
+                android:id="@+id/mainTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:hyphenationFrequency="none"
+                android:paddingBottom="25dp"
+                android:paddingLeft="25dp"
+                android:paddingRight="25dp"
+                android:paddingTop="25dp"
+                android:shadowColor="@color/md_black_1000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="4"
+                android:text="Memorize the pattern!"
+                android:textAlignment="center"
+                android:textAllCaps="true"
+                android:textColor="@color/md_grey_50"
+                android:textSize="45sp"
+                android:textStyle="bold|italic"/>
+
+        </FrameLayout>
+
+        <nl.dionsegijn.konfetti.KonfettiView
+            android:id="@+id/viewKonfetti"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"/>
+    </FrameLayout>
+
 </RelativeLayout>

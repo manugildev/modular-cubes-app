@@ -32,7 +32,7 @@
         android:layout_gravity="bottom|start"
         android:layout_margin="4dp"
         android:text=""
-        android:textColor="#ffffff"/>
+        android:textColor="#99ffffff"/>
 
     <TextView
         android:id="@+id/depthTV"

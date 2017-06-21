@@ -1,23 +1,21 @@
 package com.manugildev.modularcubes;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import com.manugildev.modularcubes.data.models.ModularCube;
+import com.manugildev.modularcubes.fragments.FragmentInterface;
 import com.manugildev.modularcubes.fragments.MainActivityFragment;
 import com.manugildev.modularcubes.fragments.MessageFragment;
 import com.manugildev.modularcubes.fragments.SecondFragment;
+import com.manugildev.modularcubes.ui.MyPagerAdapter;
 
 import java.util.TreeMap;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements FragmentInterface {
     FragmentPagerAdapter adapterViewPager;
     public TreeMap<Long, ModularCube> mData;
 
@@ -30,23 +28,7 @@ public class MainActivity extends AppCompatActivity{
         ViewPager vpPager = (ViewPager) findViewById(R.id.vpPager);
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         vpPager.setAdapter(adapterViewPager);
-        vpPager.setCurrentItem(1);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        vpPager.setCurrentItem(2);
     }
 
     @Override
@@ -64,40 +46,37 @@ public class MainActivity extends AppCompatActivity{
         return (MainActivityFragment) adapterViewPager.getItem(1);
     }
 
-    public static class MyPagerAdapter extends FragmentPagerAdapter {
-        private static int NUM_ITEMS = 3;
-        public static MessageFragment messageFragment;
+    public SecondFragment getSecondFragment() {
+        return (SecondFragment) adapterViewPager.getItem(2);
+    }
 
-        public MyPagerAdapter(FragmentManager fragmentManager) {
-            super(fragmentManager);
-            messageFragment = MessageFragment.newInstance();
-        }
+    @Override
+    public void communicateToFragment2() {
+        getSecondFragment().updatedData();
+    }
 
-        // Returns total number of pages
-        @Override
-        public int getCount() {
-            return NUM_ITEMS;
-        }
+    @Override
+    public void removeItem(ModularCube modularCube) {
+        getSecondFragment().removeCube(modularCube);
+    }
 
-        // Returns the fragment to display for that page
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case 0:
-                    return messageFragment;
-                case 1:
-                    return MainActivityFragment.newInstance();
-                case 2:
-                    return SecondFragment.newInstance();
-                default:
-                    return null;
-            }
-        }
+    @Override
+    public void addItem(ModularCube modularCube) {
+        getSecondFragment().addCube(modularCube);
+    }
 
-        // Returns the page title for the top indicator
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return "Page " + position;
-        }
+    @Override
+    public void sendMessage(String message) {
+        getMainFragment().sendMessage(message);
+    }
+
+    @Override
+    public void updatedCube(ModularCube cube) {
+        getSecondFragment().updatedCube(cube);
+    }
+
+    @Override
+    public void sendActivate(long currentCube, boolean b) {
+        getMainFragment().sendActivate(currentCube, b);
     }
 }

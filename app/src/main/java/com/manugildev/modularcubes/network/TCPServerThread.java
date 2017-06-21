@@ -44,39 +44,49 @@ public class TCPServerThread extends Thread {
 
     public void setRunning(boolean running) {
         this.running = running;
-        if (socket != null) socket.close();
+        if (socket != null) {
+            socket.disconnect();
+            socket.close();
+        }
     }
 
     public boolean sendMessage(String message) {
-        weGotSomething = false;
-        while (!weGotSomething) {
-            if (socket == null) return false;
-            byte[] send_data = new byte[1024];
-            String str = message;
-            send_data = str.getBytes();
-            DatagramPacket send_packet;
-            try {
-                send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
-                if (!socket.isClosed()) {
-                    socket.send(send_packet);
-                    System.out.println("Message sent " + message);
-                }
-                break;
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-                setRunning(false);
-            } catch (IOException e) {
-                e.printStackTrace();
-                setRunning(false);
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        fragment.setDisconnected();
-                    }
-                });
+
+        if (socket == null) return false;
+        byte[] send_data = new byte[1024];
+        String str = message;
+        send_data = str.getBytes();
+        DatagramPacket send_packet;
+        try {
+            send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
+            if (!socket.isClosed()) {
+                socket.send(send_packet);
+                System.out.println("Message sent " + message);
             }
+            return true;
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            setRunning(false);
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    fragment.setDisconnected();
+                }
+            });
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            setRunning(false);
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    fragment.setDisconnected();
+                }
+            });
+            return false;
         }
-        return true;
+
+
     }
 
     public boolean sendActivate(ModularCube cube) {
@@ -256,8 +266,8 @@ public class TCPServerThread extends Thread {
             weGotSomething = true;
         } else if (received.startsWith("connections=")) {
             final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
-            Log.d("TimeElapsed", elapsed);
-            Log.d("Connections", received.replace("connections=", ""));
+            //Log.d("TimeElapsed", elapsed);
+            //Log.d("Connections", received.replace("connections=", ""));
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
