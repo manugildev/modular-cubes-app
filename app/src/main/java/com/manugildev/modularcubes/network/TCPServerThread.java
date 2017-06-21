@@ -32,7 +32,9 @@ public class TCPServerThread extends Thread {
 
     boolean running;
     private boolean weGotSomething = false;
+    public boolean gotConnections = true;
     private long timeSend;
+    public int connectionTries = 0;
 
     public TCPServerThread(MainActivityFragment fragment, String gateway, int serverPort) {
         super();
@@ -45,8 +47,8 @@ public class TCPServerThread extends Thread {
     public void setRunning(boolean running) {
         this.running = running;
         if (socket != null) {
-            socket.disconnect();
             socket.close();
+            socket.disconnect();
         }
     }
 
@@ -67,22 +69,12 @@ public class TCPServerThread extends Thread {
         } catch (UnknownHostException e) {
             e.printStackTrace();
             setRunning(false);
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    fragment.setDisconnected();
-                }
-            });
+            activity.runOnUiThread(fragment::setDisconnected);
             return false;
         } catch (IOException e) {
             e.printStackTrace();
             setRunning(false);
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    fragment.setDisconnected();
-                }
-            });
+            activity.runOnUiThread(fragment::setDisconnected);
             return false;
         }
 
@@ -159,7 +151,7 @@ public class TCPServerThread extends Thread {
 
         try {
             System.out.println("Starting UDP Server");
-            socket = new DatagramSocket(serverPort);
+            socket = new DatagramSocket();
 
             System.out.println("UDP Server is running");
             sendMessage("android");
@@ -197,13 +189,9 @@ public class TCPServerThread extends Thread {
         } catch (BindException e) {
             if (socket != null) {
                 socket.close();
+                socket.disconnect();
             }
             setRunning(false);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
             //if (fragment != null) fragment.startUDP();
             e.printStackTrace();
         } catch (IOException e) {
@@ -230,6 +218,7 @@ public class TCPServerThread extends Thread {
             });
             weGotSomething = true;
         } else if (received.startsWith("connection=")) {
+            weGotSomething = true;
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -265,6 +254,8 @@ public class TCPServerThread extends Thread {
             });
             weGotSomething = true;
         } else if (received.startsWith("connections=")) {
+            gotConnections = true;
+            connectionTries = 0;
             final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
             //Log.d("TimeElapsed", elapsed);
             //Log.d("Connections", received.replace("connections=", ""));

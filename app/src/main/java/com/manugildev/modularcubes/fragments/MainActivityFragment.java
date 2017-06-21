@@ -53,6 +53,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -172,14 +173,31 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 public void run() {
                     sendTime = System.currentTimeMillis();
                     if (TCPServerThread != null) {
-                        if (activity.mData.size() == 0)
+                        if (activity.mData.size() == 0) {
                             TCPServerThread.sendMessage("android");
-                        else {
-                            TCPServerThread.sendMessage("connections");
-                            delay = 1000;
+                            activity.mData.clear();
+                            delay = 100;
+                        } else {
+                            if (TCPServerThread.gotConnections && TCPServerThread.connectionTries < 10) {
+                                TCPServerThread.gotConnections = false;
+                                TCPServerThread.sendMessage("connections");
+                                delay = 1000;
+                            } else {
+                                if (TCPServerThread.connectionTries < 10) {
+                                    TCPServerThread.connectionTries++;
+                                    TCPServerThread.sendMessage("connections");
+                                    delay = 300;
+                                } else
+                                    activity.runOnUiThread(() -> {
+                                        setDisconnected();
+                                    });
+
+                            }
+
                         }
+                        myHandler.postDelayed(this, delay);
                     }
-                    myHandler.postDelayed(this, delay);
+
                 }
             };
             myHandler.postDelayed(myRunnable, delay);
@@ -612,12 +630,12 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         if (TCPServerThread != null) {
             TCPServerThread.setRunning(false);
             TCPServerThread.interrupt();
+            TCPServerThread = null;
         }
-        if (TCPServerThread == null) {
-            TCPServerThread = new TCPServerThread(fragment, gateway, 8266);
-            TCPServerThread.setRunning(false);
-            TCPServerThread.start();
-        }
+        TCPServerThread = new TCPServerThread(fragment, gateway, 8266);
+        TCPServerThread.setRunning(false);
+        TCPServerThread.start();
+        startPollingConnections();
     }
 
 
@@ -938,10 +956,16 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         System.out.println("Disconnected");
         mNoCubesTV.setVisibility(View.VISIBLE);
         gridLayout.setVisibility(View.GONE);
-        TCPServerThread = null;
-        for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
-            removeCube(String.valueOf(entry.getKey()));
+        Iterator it = activity.mData.values().iterator();
+        while (it.hasNext()) {
+            ModularCube item = (ModularCube) it.next();
+            removeCube(String.valueOf(item.getDeviceId()));
+            it = activity.mData.values().iterator();
         }
+        //TCPServerThread = null;
+        //activity.mData.clear();
+        //myHandler.removeCallbacks(myRunnable);
+        startWifi();
 
     }
 
