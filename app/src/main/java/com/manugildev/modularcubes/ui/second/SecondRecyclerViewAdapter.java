@@ -32,7 +32,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     // inflates the cell layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.recyclerview_item, parent, false);
+        View view = mInflater.inflate(R.layout.moto_tile_item, parent, false);
         ViewHolder viewHolder = new ViewHolder(view);
         return viewHolder;
     }
@@ -58,12 +58,9 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     }
 
     public void removeItem(ModularCube cube) {
-        for (int i = 0; i < mData.size(); i++) {
-            if (mData.get(i).getDeviceId() == cube.getDeviceId()) {
-                mData.remove(i);
-                notifyItemRemoved(i);
-            }
-        }
+        int i = getCubeIndexById(cube.getDeviceId());
+        mData.remove(i);
+        notifyItemRemoved(i);
     }
 
     public int getCubeIndexById(long cubeId) {
