@@ -7,6 +7,7 @@
     android:name="com.manugildev.modularcubes.fragments.MessageFragment2"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_grey_900"
     android:layout_marginLeft="10dp"
     android:layout_marginRight="10dp"
     app:layoutManager="LinearLayoutManager"

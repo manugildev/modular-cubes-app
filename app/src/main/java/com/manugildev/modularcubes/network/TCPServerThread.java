@@ -46,15 +46,21 @@ public class TCPServerThread extends Thread {
 
     public void setRunning(boolean running) {
         this.running = running;
-        if (socket != null) {
-            socket.close();
-            socket.disconnect();
+        try {
+            if (socket != null) {
+                socket.close();
+                socket.disconnect();
+                socket = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public boolean sendMessage(String message) {
 
         if (socket == null) return false;
+        if (!running) return false;
         byte[] send_data = new byte[1024];
         String str = message;
         send_data = str.getBytes();
@@ -64,6 +70,7 @@ public class TCPServerThread extends Thread {
             if (!socket.isClosed()) {
                 socket.send(send_packet);
                 System.out.println("Message sent " + message);
+
             }
             return true;
         } catch (UnknownHostException e) {
@@ -156,6 +163,7 @@ public class TCPServerThread extends Thread {
             System.out.println("UDP Server is running");
             sendMessage("android");
             while (running) {
+                //if (fragment.isConnectedToMesh()) {
                 byte[] buf = new byte[800];
                 // receive request
                 packet = new DatagramPacket(buf, buf.length);
@@ -165,7 +173,6 @@ public class TCPServerThread extends Thread {
                 System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
                 InetAddress address = packet.getAddress();
                 int port = packet.getPort();
-
                 final String received = new String(data);
                 if (fragment != null && fragment.getActivity() != null) {
                     parseReceivedData(received);
@@ -182,7 +189,7 @@ public class TCPServerThread extends Thread {
                 buf = dString.getBytes();
                 packet = new DatagramPacket(buf, buf.length, address, port);
                 //socket.send(packet);
-
+                //}
             }
 
             Log.e(TAG, "UDP Server ended");
@@ -194,7 +201,7 @@ public class TCPServerThread extends Thread {
             setRunning(false);
             //if (fragment != null) fragment.startUDP();
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
 
         } finally {
@@ -203,6 +210,7 @@ public class TCPServerThread extends Thread {
                 Log.e(TAG, "socket.close()");
             }
         }
+
     }
 
     private void parseReceivedData(final String received) {
@@ -215,6 +223,7 @@ public class TCPServerThread extends Thread {
                     TreeMap<Long, ModularCube> modularCube = parseJson(d);
                     fragment.firstCubeId = modularCube.firstKey();
                     fragment.updateInformation(parseJson(d));
+                    fragment.startPollingConnections();
                 }
             });
             weGotSomething = true;
@@ -224,7 +233,7 @@ public class TCPServerThread extends Thread {
                 @Override
                 public void run() {
                     String nodeId = received.replace("connection=", "");
-                    //fragment.addCube(nodeId);
+                    //fragment.onAddcube(nodeId);
                 }
             });
             weGotSomething = true;
@@ -233,7 +242,7 @@ public class TCPServerThread extends Thread {
                 @Override
                 public void run() {
                     String nodeId = received.replace("disconnection=", "");
-                    //fragment.removeCube(nodeId);
+                    //fragment.onRemoveCube(nodeId);
                 }
             });
             weGotSomething = true;

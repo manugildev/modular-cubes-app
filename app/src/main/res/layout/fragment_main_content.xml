@@ -1,7 +1,191 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context="com.manugildev.modularcubes.fragments.MainActivityFragment"
+    tools:showIn="@layout/activity_main"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-</LinearLayout>
+    <GridLayout
+        android:id="@+id/gridlayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="16dp"
+        android:columnCount="2"
+        android:orientation="horizontal"
+        android:rowCount="3">
+
+    </GridLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBarTimer"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="-1dp"
+        android:max="290"
+        android:scrollbarSize="50dip"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="5dp"
+        android:layout_toEndOf="@+id/progressBarTimer"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvNumberCubes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="@string/number_of_cubes"/>
+
+        <TextView
+            android:id="@+id/timeConnections"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""/>
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/tvScore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="5dp"
+        android:layout_toEndOf="@+id/progressBarTimer"
+        android:text="@string/score"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+
+    <LinearLayout
+        android:id="@+id/noCubesLL"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_toEndOf="@+id/progressBarTimer"
+        android:orientation="vertical">
+
+        <pl.bclogic.pulsator4droid.library.PulsatorLayout
+            android:id="@+id/pulsator"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:layout_margin="16dp"
+            app:pulse_color="@color/colorAccent"
+            app:pulse_count="4"
+            app:pulse_duration="3000"
+            app:pulse_interpolator="Linear"
+            app:pulse_repeat="0"
+            app:pulse_startFromScratch="true">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/android_phone"/>
+
+        </pl.bclogic.pulsator4droid.library.PulsatorLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="5dp"
+            android:text="@string/noCubes"
+            android:textColor="@color/md_grey_400"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+
+
+    </LinearLayout>
+
+
+    <com.mikhaellopez.circularprogressbar.CircularProgressBar
+        android:id="@+id/timeCircularProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="10dp"
+        app:cpb_background_progressbar_color="#66385cfd"
+        app:cpb_background_progressbar_width="15dp"
+        app:cpb_progressbar_color="#385cfd"
+        app:cpb_progressbar_width="15dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingBottom="10dp"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp">
+
+        <Button
+            android:id="@+id/buttonStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/start_game"
+            android:textColor="#FFFFFF"
+            android:visibility="visible"/>
+
+        <Button
+            android:id="@+id/buttonON"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/start_all"
+            android:textColor="#FFFFFF"
+            android:visibility="visible"/>
+
+        <Button
+            android:id="@+id/buttonOFF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/stop_all"
+            android:textColor="#FFFFFF"
+            android:visibility="visible"/>
+
+        <!--<Button-->
+        <!--android:id="@+id/buttonSumOK"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:text="SumOK"-->
+        <!--android:visibility="visible"/>-->
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:shadowColor="@color/md_black_1000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="2"
+        android:text="0"
+        android:textColor="#385cfd"
+        android:textSize="90sp"
+        android:textStyle="bold"/>
+
+</RelativeLayout>

@@ -13,6 +13,7 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.net.NetworkInfo;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -22,7 +23,9 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.Toolbar;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.util.TypedValue;
@@ -61,7 +64,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+import pl.bclogic.pulsator4droid.library.PulsatorLayout;
+
 import static android.content.Context.AUDIO_SERVICE;
+import static android.content.Context.WIFI_SERVICE;
 import static com.manugildev.modularcubes.R.drawable.activate_off;
 import static com.manugildev.modularcubes.R.drawable.activate_on;
 import static com.manugildev.modularcubes.R.id.gridlayout;
@@ -153,21 +159,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         startPollingConnections();
     }
 
-    private void sendActivateToAll(final boolean b) {
-        if (myHandler2 == null) {
-            myHandler2 = new Handler();
-            final int delay = 10; //milliseconds
-            myRunnable2 = new Runnable() {
-                public void run() {
-                    sendTime = System.currentTimeMillis();
-                    TCPServerThread.sendMessage("all=stop");
-                }
-            };
-            myHandler2.postDelayed(myRunnable2, delay);
-        }
-    }
+    public void startPollingConnections() {
 
-    private void startPollingConnections() {
         if (myHandler == null) {
             myHandler = new Handler();
             delay = 100; //milliseconds
@@ -176,9 +169,9 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                     sendTime = System.currentTimeMillis();
                     if (TCPServerThread != null) {
                         if (activity.mData.size() == 0) {
-                            TCPServerThread.sendMessage("android");
-                            activity.mData.clear();
-                            delay = 100;
+                            if (isConnectedToMesh()) TCPServerThread.sendMessage("android");
+                            else startWifi();
+                            delay = 240;
                         } else {
                             if (TCPServerThread.gotConnections && TCPServerThread.connectionTries < 10) {
                                 TCPServerThread.gotConnections = false;
@@ -200,12 +193,12 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                             }
 
                         }
-                        myHandler.postDelayed(this, delay);
+                        if (myHandler != null) myHandler.postDelayed(this, delay);
                     }
 
                 }
             };
-            myHandler.postDelayed(myRunnable, delay);
+            if (myHandler != null) myHandler.postDelayed(myRunnable, delay);
         }
 
     }
@@ -213,6 +206,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         progressBar = (ProgressBar) rootView.findViewById(R.id.progressBarTimer);
         mNumberOfCubesTV = (TextView) rootView.findViewById(R.id.tvNumberCubes);
         mStartB = (Button) rootView.findViewById(R.id.buttonStart);
@@ -231,6 +226,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mNumberTV.setScaleY(5);
         mTimeConnectionsTv = (TextView) rootView.findViewById(R.id.timeConnections);
         mScoreTV = (TextView) rootView.findViewById(R.id.tvScore);
+        PulsatorLayout mPulsator = (PulsatorLayout) rootView.findViewById(R.id.pulsator);
+        mPulsator.start();
         resetVariables();
         return rootView;
     }
@@ -524,7 +521,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     private void animateCubeOnCreate(View v) {
         v.setScaleX(0.0f);
         v.setScaleY(0.0f);
-        v.animate().scaleX(1).scaleY(1).setDuration(300).setStartDelay((int) (Math.random() * 200 + 30));
+        v.animate().scaleX(1).scaleY(1).setDuration((int) (Math.random() * 200 + 150));
     }
 
     public void changeTextInButton(final ModularCube cube) {
@@ -577,7 +574,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     private void startWifi() {
-        wifiManager = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager = (WifiManager) activity.getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo info = wifiManager.getConnectionInfo();
         if (!info.getSSID().contains(networkSSID)) {
             WifiConfiguration conf = new WifiConfiguration();
@@ -593,29 +590,36 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                         break;
                     }
                 }
-            receiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    final String action = intent.getAction();
+            if (receiver == null) {
+                receiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        final String action = intent.getAction();
 
-                    if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-                        NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-                        boolean connected = info.isConnected();
-                        if (connected) {
-                            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                            String ssid = wifiInfo.getSSID();
-                            Log.d("SSID", ssid + " " + networkSSID);
-                            if (ssid.contains(networkSSID)) {
-                                gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
-                                startUDP();
-                            }
-                        } else {
+                        if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                            NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                            boolean connected = info.isConnected();
+                            if (connected) {
+                                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                                String ssid = wifiInfo.getSSID();
+                                Log.d("SSID", ssid + " " + networkSSID);
+                                if (ssid.contains(networkSSID)) {
+                                    gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
+                                    startUDP();
+                                }
+                            } /*else {
                             setDisconnected();
+                        }*/
                         }
                     }
+                };
+                try {
+                    IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+                    getActivity().registerReceiver(receiver, intentFilter);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            };
-            getActivity().registerReceiver(receiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
+            }
         } else {
             gateway = Formatter.formatIpAddress(wifiManager.getDhcpInfo().gateway);
             startUDP();
@@ -644,6 +648,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         TCPServerThread.setRunning(false);
         TCPServerThread.start();
         startPollingConnections();
+
     }
 
 
@@ -841,8 +846,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 mCountDownTimer.cancel();
             changeScore(score += 1);
             startTimer(currentTime);
-        } else {
-
         }
     }
 
@@ -972,8 +975,14 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         }
         //TCPServerThread = null;
         //activity.mData.clear();
+        activity.mData.clear();
         //myHandler.removeCallbacks(myRunnable);
+        if (mCountDownTimer != null) mCountDownTimer.cancel();
+        if (TCPServerThread != null) TCPServerThread.setRunning(false);
+        WifiManager wm = (WifiManager) getActivity().getApplicationContext().getSystemService(WIFI_SERVICE);
+       // if (!isConnectedToMesh()) wm.disconnect();
         startWifi();
+        startPollingConnections();
 
     }
 
@@ -1002,5 +1011,18 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
 
         }
         return returnColor;
+    }
+
+    public boolean isConnectedToMesh() {
+        WifiManager wifiManager = (WifiManager) activity.getApplicationContext().getSystemService(WIFI_SERVICE);
+        WifiInfo info = wifiManager.getConnectionInfo();
+        if (info.getSupplicantState() == SupplicantState.COMPLETED) {
+            String ssid = info.getSSID();
+            if (ssid.contains(networkSSID))
+                return true;
+            else return false;
+        }
+        return false;
+
     }
 }

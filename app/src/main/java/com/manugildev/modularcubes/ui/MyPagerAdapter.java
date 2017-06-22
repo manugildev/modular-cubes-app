@@ -7,18 +7,21 @@ import android.support.v4.app.FragmentPagerAdapter;
 import com.manugildev.modularcubes.fragments.MainActivityFragment;
 import com.manugildev.modularcubes.fragments.MessageFragment;
 import com.manugildev.modularcubes.fragments.SecondFragment;
+import com.manugildev.modularcubes.fragments.ThirdFragment;
 
 public class MyPagerAdapter extends FragmentPagerAdapter {
-    private static int NUM_ITEMS = 3;
+    private static int NUM_ITEMS = 4;
     public static MessageFragment messageFragment;
     public static MainActivityFragment mainActivityFragment;
     public static SecondFragment secondFragment;
+    public static ThirdFragment thirdFragment;
 
     public MyPagerAdapter(FragmentManager fragmentManager) {
         super(fragmentManager);
         messageFragment = MessageFragment.newInstance();
         mainActivityFragment = MainActivityFragment.newInstance();
         secondFragment = SecondFragment.newInstance();
+        thirdFragment = ThirdFragment.newInstance();
     }
 
     // Returns total number of pages
@@ -37,6 +40,8 @@ public class MyPagerAdapter extends FragmentPagerAdapter {
                 return mainActivityFragment;
             case 2:
                 return secondFragment;
+            case 3:
+                return thirdFragment;
             default:
                 return null;
         }

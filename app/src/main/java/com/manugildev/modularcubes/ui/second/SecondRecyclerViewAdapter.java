@@ -15,7 +15,7 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.ArrayList;
 
-public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
+public class SecondRecyclerViewAdapter extends RecyclerView.Adapter<SecondRecyclerViewAdapter.ViewHolder> {
 
     private ArrayList<ModularCube> mData = new ArrayList<>();
     private LayoutInflater mInflater;
@@ -23,7 +23,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private Context context;
 
     // data is passed into the constructor
-    public MyRecyclerViewAdapter(Context context, ArrayList<ModularCube> data) {
+    public SecondRecyclerViewAdapter(Context context, ArrayList<ModularCube> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
         this.context = context;

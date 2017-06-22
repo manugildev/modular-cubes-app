@@ -267,4 +267,15 @@
         <item name="grey_1000b" type="color">#000000</item>
         <item name="grey_1000w" type="color">#ffffff</item>
     </array>
+
+    <string-array name="BubbleAnimations">
+        <item>com.github.glomadrian.grav.generator.animation.SideToSideAnimator</item>
+        <item>com.github.glomadrian.grav.generator.animation.ShakeAnimator</item>
+    </string-array>
+    <string-array name="bubble">
+        <item>#41ffffff</item>
+        <item>#18ffffff</item>
+        <item>#1fffffff</item>
+        <item>#25ffffff</item>
+    </string-array>
 </resources>

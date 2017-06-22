@@ -28,7 +28,7 @@ import com.manugildev.modularcubes.MainActivity;
 import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.ui.FlatColors;
-import com.manugildev.modularcubes.ui.second.MyRecyclerViewAdapter;
+import com.manugildev.modularcubes.ui.second.SecondRecyclerViewAdapter;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ import nl.dionsegijn.konfetti.models.Size;
 
 import static android.content.Context.AUDIO_SERVICE;
 
-public class SecondFragment extends Fragment implements View.OnClickListener, MyRecyclerViewAdapter.ItemClickListener {
+public class SecondFragment extends Fragment implements View.OnClickListener, SecondRecyclerViewAdapter.ItemClickListener {
 
     private FragmentInterface mCallback;
     private MainActivity activity;
@@ -59,7 +59,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
 
     // VIEWS
     private Button testButton;
-    private MyRecyclerViewAdapter adapter;
+    private SecondRecyclerViewAdapter adapter;
     private RecyclerView recyclerView;
     private KonfettiView viewKonfetti;
     private TextView mainTextView;
@@ -79,6 +79,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
     private int positiveSound;
     private int negativeSound;
     private int endSound;
+    private int gameOverSound;
     private float volume;
 
     private ArrayList<ModularCube> cubes = new ArrayList<>();
@@ -92,7 +93,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
         super.onViewCreated(view, savedInstanceState);
         activity = (MainActivity) getActivity();
         fragment = (SecondFragment) this;
-        adapter = new MyRecyclerViewAdapter(activity, cubes);
+        adapter = new SecondRecyclerViewAdapter(activity, cubes);
         adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
         musicStuff();
@@ -153,6 +154,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
         this.positiveSound = this.soundPool.load(activity, R.raw.positive, 1);
         this.negativeSound = this.soundPool.load(activity, R.raw.negative, 1);
         this.endSound = this.soundPool.load(activity, R.raw.end, 1);
+        this.gameOverSound = this.soundPool.load(activity, R.raw.gameover, 1);
     }
 
     @Override
@@ -374,11 +376,11 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
         animateScoreTextView("GameOver!", 0, 500);
         //animateMainTextView("GameOver...", 800);
         playNegativeSound();
+        playGameOverSound();
         endSimon();
     }
 
-    public void updatedCube(ModularCube cube) {
-        Log.d("UpdateCube", cube.toString());
+    public void onUpdatedCube(ModularCube cube) {
         if (playing)
             if (activity.mData.containsKey(currentCube) && currentCube != 0) {
                 if (currentCube == cube.getDeviceId()) {
@@ -426,11 +428,11 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
         thread.start();
     }
 
-    public void addCube(ModularCube cube) {
+    public void onAddcube(ModularCube cube) {
         saveToArray(cube);
     }
 
-    public void removeCube(ModularCube cube) {
+    public void onRemoveCube(ModularCube cube) {
         adapter.removeItem(cube);
     }
 
@@ -488,6 +490,14 @@ public class SecondFragment extends Fragment implements View.OnClickListener, My
             float leftVolumn = volume;
             float rightVolumn = volume;
             int streamId = this.soundPool.play(this.endSound, leftVolumn, rightVolumn, 1, 0, 1f);
+        }
+    }
+
+    public void playGameOverSound() {
+        if (loaded) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+            int streamId = this.soundPool.play(this.gameOverSound, leftVolumn, rightVolumn, 1, 0, 1f);
         }
     }
 
