@@ -100,7 +100,6 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
         ButterKnife.bind(this, rootView);
         this.recyclerView.setItemAnimator(new ScaleInAnimator());
         this.recyclerView.setLayoutManager(new LinearLayoutManager(activity));
-
         return rootView;
     }
 
