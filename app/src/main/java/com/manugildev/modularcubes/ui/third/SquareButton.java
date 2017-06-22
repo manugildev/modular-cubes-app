@@ -17,10 +17,6 @@ public class SquareButton extends Button {
         super(context, attrs, defStyleAttr);
     }
 
-    public SquareButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-    }
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, widthMeasureSpec);

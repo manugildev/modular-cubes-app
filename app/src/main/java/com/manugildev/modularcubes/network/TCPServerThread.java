@@ -1,5 +1,6 @@
 package com.manugildev.modularcubes.network;
 
+import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
 import com.manugildev.modularcubes.MainActivity;
@@ -70,7 +71,6 @@ public class TCPServerThread extends Thread {
             if (!socket.isClosed()) {
                 socket.send(send_packet);
                 System.out.println("Message sent " + message);
-
             }
             return true;
         } catch (UnknownHostException e) {
@@ -82,6 +82,11 @@ public class TCPServerThread extends Thread {
             e.printStackTrace();
             setRunning(false);
             activity.runOnUiThread(fragment::setDisconnected);
+            return false;
+        } catch (NetworkOnMainThreadException e) {
+            e.printStackTrace();
+            //setRunning(false);
+            //activity.runOnUiThread(fragment::setDisconnected);
             return false;
         }
 

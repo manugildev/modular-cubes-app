@@ -13,11 +13,12 @@ import android.view.ViewGroup;
 
 import com.manugildev.modularcubes.R;
 import com.manugildev.modularcubes.fragments.dummy.Messages;
+import com.manugildev.modularcubes.ui.messages.MessagesRecyclerViewAdapter;
 
 public class MessageFragment extends Fragment {
 
     private int mColumnCount = 1;
-    private MyMessageRecyclerViewAdapter mAdapter;
+    private MessagesRecyclerViewAdapter mAdapter;
     RecyclerView recyclerView;
 
     public MessageFragment() {
@@ -50,7 +51,7 @@ public class MessageFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            mAdapter = new MyMessageRecyclerViewAdapter(Messages.ITEMS);
+            mAdapter = new MessagesRecyclerViewAdapter(Messages.ITEMS);
             recyclerView.setAdapter(mAdapter);
         }
         return view;

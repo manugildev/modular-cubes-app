@@ -16,6 +16,9 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecyclerViewAdapter.ViewHolder> {
 
     private ArrayList<Player> playerData = new ArrayList<>();
@@ -24,9 +27,8 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
     private Context context;
 
     // data is passed into the constructor
-    public ThirdRecyclerViewAdapter(Context context, ArrayList<Player> data) {
+    public ThirdRecyclerViewAdapter(Context context) {
         this.mInflater = LayoutInflater.from(context);
-        this.playerData = data;
         this.context = context;
     }
 
@@ -41,9 +43,14 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Player player = playerData.get(position);
+        int color = Color.parseColor(playerData.get(position).getColor());
         holder.numberTextView.setText(player.getName());
-        holder.progressBar1.setColor(Color.parseColor(playerData.get(position).getColor()));
-        holder.progressBar2.setBackgroundColor(ColorUtils.setAlphaComponent(Color.parseColor(playerData.get(position).getColor()), 60));
+        holder.numberTextView.setTextColor(color);
+        holder.progressBar1.setColor(color);
+        holder.progressBar1.setBackgroundColor(ColorUtils.setAlphaComponent(color, 60));
+        holder.progressBar2.setColor(color);
+        holder.progressBar2.setBackgroundColor(ColorUtils.setAlphaComponent(color, 60));
+
     }
 
     // total number of cells
@@ -53,23 +60,36 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
     }
 
     public void addItem(Player cube) {
-        playerData.add(cube);
-        notifyItemInserted(getItemCount() - 1);
+        playerData.add(0, cube);
+        notifyItemInserted(0);
+    }
+
+    public void removeAll() {
+        if (playerData.size() > 0)
+            for (int i = 0; i < playerData.size(); i++) {
+                playerData.remove(i);
+                notifyItemRemoved(i);
+            }
+    }
+
+    public ArrayList<Player> getPlayers() {
+        return playerData;
     }
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        @BindView(R.id.numberTextView)
         public TextView numberTextView;
+        @BindView(R.id.tile1)
         public CardView tile1;
+        @BindView(R.id.tile2)
         public CardView tile2;
         public CircularProgressBar progressBar1;
         public CircularProgressBar progressBar2;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            numberTextView = (TextView) itemView.findViewById(R.id.numberTextView);
-            tile1 = (CardView) itemView.findViewById(R.id.tile1);
-            tile2 = (CardView) itemView.findViewById(R.id.tile2);
+            ButterKnife.bind(this, itemView);
             progressBar1 = (CircularProgressBar) tile1.findViewById(R.id.cubeProgressBar);
             progressBar2 = (CircularProgressBar) tile2.findViewById(R.id.cubeProgressBar);
             itemView.setOnClickListener(this);

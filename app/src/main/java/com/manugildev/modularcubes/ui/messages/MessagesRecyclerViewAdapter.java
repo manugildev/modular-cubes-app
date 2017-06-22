@@ -1,4 +1,4 @@
-package com.manugildev.modularcubes.fragments;
+package com.manugildev.modularcubes.ui.messages;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,11 +11,11 @@ import com.manugildev.modularcubes.fragments.dummy.Messages.CubeMessage;
 
 import java.util.List;
 
-public class MyMessageRecyclerViewAdapter extends RecyclerView.Adapter<MyMessageRecyclerViewAdapter.ViewHolder> {
+public class MessagesRecyclerViewAdapter extends RecyclerView.Adapter<MessagesRecyclerViewAdapter.ViewHolder> {
 
     private final List<CubeMessage> mValues;
 
-    public MyMessageRecyclerViewAdapter(List<CubeMessage> items) {
+    public MessagesRecyclerViewAdapter(List<CubeMessage> items) {
         mValues = items;
     }
 

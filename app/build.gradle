@@ -46,4 +46,6 @@ dependencies {
     compile 'nl.dionsegijn:konfetti:1.0.2'
     compile 'pl.bclogic:pulsator4droid:1.0.3'
     compile 'com.github.glomadrian:Grav:1.1'
+    compile 'com.jakewharton:butterknife:8.6.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.6.0'
 }

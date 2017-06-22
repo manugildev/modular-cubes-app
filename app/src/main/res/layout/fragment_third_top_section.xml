@@ -3,7 +3,10 @@
                                     xmlns:app="http://schemas.android.com/apk/res-auto"
                                     android:layout_width="match_parent"
                                     android:layout_height="220dp"
-                                    android:layout_margin="16dp"
+                                    android:layout_marginTop="16dp"
+                                    android:layout_marginLeft="16dp"
+                                    android:layout_marginRight="16dp"
+                                    android:layout_marginBottom="6dp"
                                     android:backgroundTint="@color/md_grey_50"
                                     android:clickable="true"
                                     android:foreground="?android:attr/selectableItemBackground"
@@ -17,18 +20,20 @@
         android:orientation="vertical">
 
         <TextView
-            android:textAlignment="center"
-            android:textSize="20sp"
-            android:layout_marginTop="7dp"
-            android:layout_marginBottom="7dp"
-            android:text="Good Job!"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:id="@+id/mainTextView"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="7dp"
+            android:text="Add some players."
+            android:textAlignment="center"
+            android:textSize="20sp"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:layout_margin="10dp"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -39,34 +44,42 @@
                 android:orientation="vertical">
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:id="@+id/addPlayerButton"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_marginBottom="10dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/md_grey_600"
-                    android:textColor="#FFFFFF"/>
+                    android:text="A"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:id="@+id/removeAllButton"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
                     android:layout_marginTop="10dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/md_grey_600"
-                    android:textColor="#FFFFFF"/>
+                    android:text="R"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
             </LinearLayout>
 
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_marginRight="20dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:layout_weight="1">
 
                 <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                    android:id="@+id/progressBar"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
@@ -77,6 +90,7 @@
                     app:cpb_progressbar_width="10dp"/>
 
                 <TextView
+                    android:id="@+id/timeTextView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
@@ -95,27 +109,35 @@
                 android:orientation="vertical">
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:id="@+id/playButton"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_marginBottom="10dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/md_grey_600"
-                    android:textColor="#FFFFFF"/>
+                    android:text="P"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:id="@+id/resetButton"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
                     android:layout_marginTop="10dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/md_grey_600"
-                    android:textColor="#FFFFFF"/>
+                    android:text="R"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
+
             </LinearLayout>
 
         </LinearLayout>
+
 
     </LinearLayout>
 
