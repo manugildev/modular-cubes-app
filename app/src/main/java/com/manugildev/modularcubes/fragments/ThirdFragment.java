@@ -199,7 +199,7 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     @OnClick(R.id.playButton)
     public void startGame() {
         if (gameState == GameState.STOP) {
-            if (adapter.getPlayers().size() >= 0) {
+            if (adapter.getPlayers().size() > 0) {
                 winners.clear();
                 playButton.setBackgroundResource(R.drawable.pause_button);
                 progressBar.setProgressWithAnimation(100, 500);
@@ -289,11 +289,11 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
             public void run() {
                 try {
                     sleep(0);
-                    sendActivate(cube1.getDeviceId(), true);
-                    sendActivate(cube2.getDeviceId(), true);
+                    sendActivate(cube1.getDeviceId(), true, false);
+                    sendActivate(cube2.getDeviceId(), true, false);
                     sleep(1000);
-                    sendActivate(cube1.getDeviceId(), false);
-                    sendActivate(cube2.getDeviceId(), false);
+                    sendActivate(cube1.getDeviceId(), false, false);
+                    sendActivate(cube2.getDeviceId(), false, false);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -303,8 +303,8 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     }
 
 
-    private void sendActivate(long deviceId, boolean b) {
-        mCallback.sendActivate(deviceId, b);
+    private void sendActivate(long deviceId, boolean b, boolean r) {
+        mCallback.sendActivate(deviceId, b, r);
     }
 
 

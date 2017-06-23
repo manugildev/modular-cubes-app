@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
     public ThirdFragment getThirdFragment() {
         return (ThirdFragment) adapterViewPager.getItem(3);
     }
+
     @Override
     public void communicateToFragment2() {
         getSecondFragment().updatedData();
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
     }
 
     @Override
-    public void sendActivate(long currentCube, boolean b) {
-        getMainFragment().sendActivate(currentCube, b);
+    public void sendActivate(long currentCube, boolean b, boolean r) {
+        getMainFragment().sendActivate(currentCube, b, r);
     }
 }

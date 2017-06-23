@@ -9,7 +9,7 @@ public interface FragmentInterface {
 
     void updatedCube(ModularCube cube);
 
-    void sendActivate(long currentCube, boolean b);
+    void sendActivate(long currentCube, boolean b, boolean r);
 
     void removeItem(ModularCube modularCube);
 

@@ -92,10 +92,10 @@ public class TCPServerThread extends Thread {
 
     }
 
-    public boolean sendActivate(ModularCube cube) {
+    public boolean sendActivate(ModularCube cube, boolean r) {
         if (socket == null) return false;
         try {
-            String msg = createJsonActivateMessage(cube);
+            String msg = createJsonActivateMessage(cube, r);
             timeSend = System.currentTimeMillis();
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -114,10 +114,11 @@ public class TCPServerThread extends Thread {
     //================================================================================
     // JSON (Coding and Decoding)
     //================================================================================
-    private String createJsonActivateMessage(ModularCube cube) throws JSONException {
+    private String createJsonActivateMessage(ModularCube cube, boolean r) throws JSONException {
         JSONObject activate1 = new JSONObject();
         activate1.put("lIP", cube.getDeviceId());
         activate1.put("a", cube.isActivated() ? 0 : 1);
+        activate1.put("r", r);
         JSONArray jsonArray = new JSONArray();
         jsonArray.put(activate1);
         return jsonArray.toString();
@@ -222,10 +223,12 @@ public class TCPServerThread extends Thread {
                 @Override
                 public void run() {
                     fragment.firstCubeId = 0;
+                    fragment.firstAnimation();
                     String d = received.replace("initial=", "");
                     TreeMap<Long, ModularCube> modularCube = parseJson(d);
                     fragment.firstCubeId = modularCube.firstKey();
                     fragment.updateInformation(parseJson(d));
+
                 }
             });
             weGotSomething = true;
@@ -255,12 +258,6 @@ public class TCPServerThread extends Thread {
                     final String elapsed = String.valueOf(System.currentTimeMillis() - timeSend);
                     System.out.println("ELAPSED: " + elapsed);
                     String d = received.replace("information=", "");
-                    fragment.getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            fragment.mTimeConnectionsTv.setText(elapsed);
-                        }
-                    });
                     fragment.updateInformation(parseJson(d));
                 }
             });
@@ -271,24 +268,30 @@ public class TCPServerThread extends Thread {
             final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
             //Log.d("TimeElapsed", elapsed);
             //Log.d("Connections", received.replace("connections=", ""));
-            fragment.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
+            fragment.getActivity().runOnUiThread(() -> {
+                try {
                     fragment.mTimeConnectionsTv.setText(elapsed);
-                    try {
-                        fragment.calculateDepth(received.replace("connections=", ""));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                    fragment.sendTime = 0;
+                    fragment.calculateDepth(received.replace("connections=", ""));
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             });
+
+        } else if (received.startsWith("all_nodes=")) {
+            final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
+            fragment.getActivity().runOnUiThread(() -> {
+                fragment.sendTime = 0;
+                fragment.mTimeConnectionsTv.setText(elapsed);
+            });
         }
+
     }
 
-    public boolean sendActivate(ModularCube cube, boolean b) {
+    public boolean sendActivate(ModularCube cube, boolean b, boolean r) {
         if (socket == null) return false;
         try {
-            String msg = createJsonActivateMessage(cube, b);
+            String msg = createJsonActivateMessage(cube, b, r);
             timeSend = System.currentTimeMillis();
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -304,11 +307,12 @@ public class TCPServerThread extends Thread {
         }
     }
 
-    private String createJsonActivateMessage(ModularCube cube, boolean b) throws JSONException {
+    private String createJsonActivateMessage(ModularCube cube, boolean b, boolean r) throws JSONException {
         JSONObject activate1 = new JSONObject();
         if (cube != null) {
             activate1.put("lIP", cube.getDeviceId());
             activate1.put("a", b ? 1 : 0);
+            activate1.put("r", r ? 1 : 0);
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(activate1);
             return jsonArray.toString();

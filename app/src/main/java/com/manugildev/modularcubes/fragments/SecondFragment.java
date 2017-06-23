@@ -194,8 +194,8 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Se
         mCallback.sendMessage(message);
     }
 
-    private void sendActivate(long currentCube, boolean b) {
-        mCallback.sendActivate(currentCube, b);
+    private void sendActivate(long currentCube, boolean b, boolean r) {
+        mCallback.sendActivate(currentCube, b, r);
     }
 
     @Override
@@ -306,10 +306,10 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Se
                 try {
                     sleep(2300);
                     for (long s : cubesSequence) {
-                        sendActivate(s, true);
+                        sendActivate(s, true, false);
                         resizeItem(s);
                         sleep(1000);
-                        sendActivate(s, false);
+                        sendActivate(s, false, false);
                         sleep(1000);
                     }
                     animateMainTextView("GO!", 800);
