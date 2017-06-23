@@ -1,5 +1,7 @@
 package com.manugildev.modularcubes.data.models;
 
+import android.graphics.Point;
+
 import com.manugildev.modularcubes.fragments.ThirdFragment;
 
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ public class Player {
 
     private String name;
 
-    private ArrayList<Integer> cubeSequence = new ArrayList<>();
+    private ArrayList<Point> cubeSequence = new ArrayList<>();
 
     public Player(ThirdFragment thirdFragment, String name, int id, int number, ModularCube cube1, ModularCube cube2, String color) {
         this.fragment = thirdFragment;
@@ -77,23 +79,24 @@ public class Player {
         this.progress = progress;
     }
 
-    public ArrayList<Integer> getCubeSequence() {
+    public ArrayList<Point> getCubeSequence() {
         return cubeSequence;
     }
 
-    public void setCubeSequence(ArrayList<Integer> cubeSequence) {
+    public void setCubeSequence(ArrayList<Point> cubeSequence) {
         this.cubeSequence.clear();
         this.cubeSequence.addAll(cubeSequence);
-        this.number = cubeSequence.get(0);
+        this.number = cubeSequence.get(0).x * 10 + cubeSequence.get(0).y;
         this.progress = 0;
         this.times.clear();
     }
 
     public boolean areBothOnSequence() {
         if (cubeSequence.size() > 0) {
-            if (cube1.getCurrentOrientation() == cube2.getCurrentOrientation() && cube1.getCurrentOrientation() == cubeSequence.get(0)) {
+            if ((cube1.getCurrentOrientation() == cubeSequence.get(0).x && cube2.getCurrentOrientation() == cubeSequence.get(0).y) ||
+                    (cube2.getCurrentOrientation() == cubeSequence.get(0).x && cube1.getCurrentOrientation() == cubeSequence.get(0).y)) {
                 cubeSequence.remove(0);
-                if (cubeSequence.size() > 0) setNumber(cubeSequence.get(0));
+                if (cubeSequence.size() > 0) setNumber(cubeSequence.get(0).x * 10 + cubeSequence.get(0).y);
                 return true;
             }
         } else setProgress(0);

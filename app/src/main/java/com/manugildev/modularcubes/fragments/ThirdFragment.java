@@ -3,6 +3,7 @@ package com.manugildev.modularcubes.fragments;
 import android.app.Activity;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
@@ -56,7 +57,7 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     // General Variables
     private int generalColorIndex = 0;
     private ArrayList<Long> usedCubes = new ArrayList<>();
-    private ArrayList<Integer> sequence = new ArrayList<>();
+    private ArrayList<Point> sequence = new ArrayList<>();
     private ArrayList<Player> winners = new ArrayList<>();
     private String[] names = new String[]{"Max", "Manu", "Henrik", "Christina", "Claire", "Markus", "Conrad", "JBalvin", "Nacho", "Joseff", "Jessica", "Adriana", "Manolo"};
 
@@ -119,9 +120,10 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
         this.adapter.setClickListener(this);
         this.recyclerView.setAdapter(adapter);
         this.gameState = GameState.STOP;
-        this.sequence.add(6);
-        this.sequence.add(2);
-        this.sequence.add(4);
+        this.sequence.add(new Point(6, 6));
+        this.sequence.add(new Point(5, 2));
+        this.sequence.add(new Point(4, 4));
+        this.sequence.add(new Point(6, 1));
 
         setChartData();
     }
@@ -381,6 +383,14 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     // Overrides
     @Override
     public void onItemClick(View view, int position) {
+        if (view.getId() == recyclerView.findViewHolderForAdapterPosition(position).itemView.findViewById(R.id.tile1).getId()) {
+            System.out.println("Press " + position + " tile1");
+        }
+
+        if (view.getId() == recyclerView.findViewHolderForAdapterPosition(position).itemView.findViewById(R.id.tile2).getId()) {
+            System.out.println("Press " + position + " tile2");
+        }
+
 
     }
 

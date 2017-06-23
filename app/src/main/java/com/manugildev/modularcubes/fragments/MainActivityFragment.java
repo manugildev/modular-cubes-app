@@ -394,7 +394,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 Long key = entry.getKey();
                 ModularCube cube = entry.getValue();
                 //gridLayout.setVisibility(View.VISIBLE);
-                //mNoCubesTV.setVisibility(View.GONE);
+                YoYo.with(Techniques.FadeOut).duration(0).playOn(mNoCubesTV);
                 if (!lastRefresh.containsKey(key)) {
                     createViewForCube(cube);
                     gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
@@ -877,7 +877,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         c.setIp("-1");
         c.setDeviceId(id);
         c.setActivity(this);
-        c.setCurrentOrientation(-1);
+        c.setCurrentOrientation(1);
         c.setActivated(false);
         if (activity.mData.containsKey(id)) {
             removeCube(String.valueOf(id));

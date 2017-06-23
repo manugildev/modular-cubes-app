@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecyclerViewAdapter.ViewHolder> {
 
@@ -117,9 +118,10 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
             playerFrame.setAlpha(0);
             playerTextView.setAlpha(0);
             itemView.setOnClickListener(this);
+
         }
 
-        @Override
+        @OnClick(R.id.tile1)
         public void onClick(View view) {
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
         }
