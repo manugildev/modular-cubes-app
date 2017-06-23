@@ -167,10 +167,11 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             myRunnable = new Runnable() {
                 public void run() {
                     sendTime = System.currentTimeMillis();
+                    myHandler.postDelayed(this, delay);
                     if (TCPServerThread != null) {
                         if (activity.mData.size() == 0) {
-                            if (isConnectedToMesh()) TCPServerThread.sendMessage("android");
-                            else startWifi();
+                            TCPServerThread.sendMessage("android");
+                            startWifi();
                             delay = 240;
                         } else {
                             if (TCPServerThread.gotConnections && TCPServerThread.connectionTries < 10) {
@@ -193,12 +194,13 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                             }
 
                         }
-                        if (myHandler != null) myHandler.postDelayed(this, delay);
+
                     }
 
                 }
             };
-            if (myHandler != null) myHandler.postDelayed(myRunnable, delay);
+
+            myHandler.postDelayed(myRunnable, delay);
         }
 
     }
@@ -630,12 +632,14 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public void onStop() {
         super.onStop();
         if (mCountDownTimer != null) mCountDownTimer.cancel();
+        if (TCPServerThread != null) TCPServerThread.setRunning(false);
+        if (myHandler != null) myHandler.removeCallbacks(myRunnable);
         try {
             getActivity().unregisterReceiver(receiver);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (myHandler != null) myHandler.removeCallbacks(myRunnable);
+
     }
 
     public void startUDP() {
@@ -643,6 +647,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             TCPServerThread.setRunning(false);
             TCPServerThread.interrupt();
             TCPServerThread = null;
+        }
+        if (myHandler != null) {
+            myHandler.removeCallbacks(myRunnable);
+            myHandler = null;
         }
         TCPServerThread = new TCPServerThread(fragment, gateway, 8266);
         TCPServerThread.setRunning(false);
@@ -665,6 +673,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public void onDestroy() {
         if (mCountDownTimer != null) mCountDownTimer.cancel();
         if (TCPServerThread != null) TCPServerThread.setRunning(false);
+        if (myHandler != null) myHandler.removeCallbacks(myRunnable);
+
         super.onDestroy();
     }
 
@@ -980,7 +990,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         if (mCountDownTimer != null) mCountDownTimer.cancel();
         if (TCPServerThread != null) TCPServerThread.setRunning(false);
         WifiManager wm = (WifiManager) getActivity().getApplicationContext().getSystemService(WIFI_SERVICE);
-       // if (!isConnectedToMesh()) wm.disconnect();
+        // if (!isConnectedToMesh()) wm.disconnect();
         startWifi();
         startPollingConnections();
 

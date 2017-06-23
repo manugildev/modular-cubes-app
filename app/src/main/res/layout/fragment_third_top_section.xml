@@ -3,10 +3,10 @@
                                     xmlns:app="http://schemas.android.com/apk/res-auto"
                                     android:layout_width="match_parent"
                                     android:layout_height="220dp"
-                                    android:layout_marginTop="16dp"
+                                    android:layout_marginBottom="6dp"
                                     android:layout_marginLeft="16dp"
                                     android:layout_marginRight="16dp"
-                                    android:layout_marginBottom="6dp"
+                                    android:layout_marginTop="16dp"
                                     android:backgroundTint="@color/md_grey_50"
                                     android:clickable="true"
                                     android:foreground="?android:attr/selectableItemBackground"
@@ -20,8 +20,8 @@
         android:orientation="vertical">
 
         <TextView
-            android:layout_width="match_parent"
             android:id="@+id/mainTextView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="0dp"
             android:layout_marginTop="7dp"
@@ -45,27 +45,27 @@
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
                     android:id="@+id/addPlayerButton"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:layout_marginBottom="10dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginBottom="14dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
                     android:layout_weight="1"
+                    android:background="@drawable/add_button"
                     android:backgroundTint="@color/md_grey_600"
-                    android:text="A"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"/>
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
                     android:id="@+id/removeAllButton"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="14dp"
                     android:layout_weight="1"
+                    android:background="@drawable/remove_button"
                     android:backgroundTint="@color/md_grey_600"
-                    android:text="R"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"/>
             </LinearLayout>
@@ -74,8 +74,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginLeft="14dp"
+                android:layout_marginRight="14dp"
                 android:layout_weight="1">
 
                 <com.mikhaellopez.circularprogressbar.CircularProgressBar
@@ -110,27 +110,28 @@
 
                 <com.manugildev.modularcubes.ui.third.SquareButton
                     android:id="@+id/playButton"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:layout_marginBottom="10dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginBottom="14dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
                     android:layout_weight="1"
+                    android:background="@drawable/play_button"
                     android:backgroundTint="@color/md_grey_600"
-                    android:text="P"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"/>
 
+
                 <com.manugildev.modularcubes.ui.third.SquareButton
                     android:id="@+id/resetButton"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="14dp"
                     android:layout_weight="1"
+                    android:background="@drawable/stop_button"
                     android:backgroundTint="@color/md_grey_600"
-                    android:text="R"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"/>
 

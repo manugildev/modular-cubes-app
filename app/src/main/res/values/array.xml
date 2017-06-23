@@ -250,9 +250,6 @@
         <item name="red_A700" type="color">#e00032</item>
         <item name="pink_A700" type="color">#c51162</item>
         <item name="purple_A700" type="color">#aa00ff</item>
-        <item name="deep_purple_A700" type="color">#6200ea</item>
-        <item name="indigo_A700" type="color">#304ffe</item>
-        <item name="blue_A700" type="color">#4d69ff</item>
         <item name="light_blue_A700" type="color">#0091ea</item>
         <item name="cyan_A700" type="color">#00b8d4</item>
         <item name="teal_A700" type="color">#00bfa5</item>

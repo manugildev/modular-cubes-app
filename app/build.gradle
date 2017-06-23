@@ -27,7 +27,6 @@ android {
 }
 
 repositories {
-    maven { url "https://repo.eclipse.org/content/repositories/paho-snapshots/" }
     maven { url "http://dl.bintray.com/glomadrian/maven" }
 }
 
@@ -42,6 +41,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'jp.wasabeef:recyclerview-animators:2.2.6'
     compile 'com.daimajia.easing:library:2.0@aar'
+    compile 'com.github.lecho:hellocharts-android:v1.5.8'
     compile 'com.daimajia.androidanimations:library:2.2@aar'
     compile 'nl.dionsegijn:konfetti:1.0.2'
     compile 'pl.bclogic:pulsator4droid:1.0.3'

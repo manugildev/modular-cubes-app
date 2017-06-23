@@ -8,9 +8,11 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.manugildev.modularcubes.R;
+import com.manugildev.modularcubes.data.models.ModularCube;
 import com.manugildev.modularcubes.data.models.Player;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
@@ -44,13 +46,15 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
     public void onBindViewHolder(ViewHolder holder, int position) {
         Player player = playerData.get(position);
         int color = Color.parseColor(playerData.get(position).getColor());
-        holder.numberTextView.setText(player.getName());
+        holder.numberTextView.setText(String.valueOf(player.getNumber()));
         holder.numberTextView.setTextColor(color);
         holder.progressBar1.setColor(color);
         holder.progressBar1.setBackgroundColor(ColorUtils.setAlphaComponent(color, 60));
         holder.progressBar2.setColor(color);
         holder.progressBar2.setBackgroundColor(ColorUtils.setAlphaComponent(color, 60));
-
+        holder.progressBar1.setProgressWithAnimation(player.getProgress(), 800);
+        holder.progressBar2.setProgressWithAnimation(player.getProgress(), 800);
+        holder.playerFrame.setBackgroundColor(color);
     }
 
     // total number of cells
@@ -60,8 +64,8 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
     }
 
     public void addItem(Player cube) {
-        playerData.add(0, cube);
-        notifyItemInserted(0);
+        playerData.add(cube);
+        notifyItemInserted(playerData.size() - 1);
     }
 
     public void removeAll() {
@@ -76,6 +80,20 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         return playerData;
     }
 
+    public Player getPlayerByCube(ModularCube cube) {
+        for (Player p : playerData) {
+            if (cube.getDeviceId() == p.getCube1().getDeviceId()) {
+                p.getCube1().setCurrentOrientation(cube.getCurrentOrientation());
+                return p;
+            }
+            if (cube.getDeviceId() == p.getCube2().getDeviceId()) {
+                p.getCube2().setCurrentOrientation(cube.getCurrentOrientation());
+                return p;
+            }
+        }
+        return null;
+    }
+
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @BindView(R.id.numberTextView)
@@ -86,12 +104,18 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         public CardView tile2;
         public CircularProgressBar progressBar1;
         public CircularProgressBar progressBar2;
+        @BindView(R.id.playerFrameLayout)
+        public FrameLayout playerFrame;
+        @BindView(R.id.playerTextView)
+        public TextView playerTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             progressBar1 = (CircularProgressBar) tile1.findViewById(R.id.cubeProgressBar);
             progressBar2 = (CircularProgressBar) tile2.findViewById(R.id.cubeProgressBar);
+            playerFrame.setAlpha(0);
+            playerTextView.setAlpha(0);
             itemView.setOnClickListener(this);
         }
 

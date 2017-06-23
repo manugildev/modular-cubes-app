@@ -61,7 +61,6 @@ public class TCPServerThread extends Thread {
     public boolean sendMessage(String message) {
 
         if (socket == null) return false;
-        if (!running) return false;
         byte[] send_data = new byte[1024];
         String str = message;
         send_data = str.getBytes();
@@ -204,7 +203,6 @@ public class TCPServerThread extends Thread {
                 socket.disconnect();
             }
             setRunning(false);
-            //if (fragment != null) fragment.startUDP();
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
@@ -228,7 +226,6 @@ public class TCPServerThread extends Thread {
                     TreeMap<Long, ModularCube> modularCube = parseJson(d);
                     fragment.firstCubeId = modularCube.firstKey();
                     fragment.updateInformation(parseJson(d));
-                    fragment.startPollingConnections();
                 }
             });
             weGotSomething = true;

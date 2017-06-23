@@ -80,6 +80,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Se
     private int negativeSound;
     private int endSound;
     private int gameOverSound;
+    private int powerUpSound;
     private float volume;
 
     private ArrayList<ModularCube> cubes = new ArrayList<>();
@@ -155,6 +156,7 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Se
         this.negativeSound = this.soundPool.load(activity, R.raw.negative, 1);
         this.endSound = this.soundPool.load(activity, R.raw.end, 1);
         this.gameOverSound = this.soundPool.load(activity, R.raw.gameover, 1);
+        this.powerUpSound = this.soundPool.load(activity, R.raw.powerup, 1);
     }
 
     @Override
@@ -490,6 +492,14 @@ public class SecondFragment extends Fragment implements View.OnClickListener, Se
             float leftVolumn = volume;
             float rightVolumn = volume;
             int streamId = this.soundPool.play(this.endSound, leftVolumn, rightVolumn, 1, 0, 1f);
+        }
+    }
+
+    public void playPowerUpSound() {
+        if (loaded) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+            int streamId = this.soundPool.play(this.powerUpSound, leftVolumn, rightVolumn, 1, 0, 1f);
         }
     }
 
