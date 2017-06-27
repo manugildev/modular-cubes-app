@@ -2,8 +2,6 @@
     <string name="app_name">Modular Cubes App</string>
     <string name="action_settings">Settings</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="number_of_cubes">Number of Cubes: %1s<br/>Time Left: %2$.2f </string>
     <string name="get_an_orientation">%1d</string>
     <string name="start_game">START</string>

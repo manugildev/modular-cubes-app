@@ -14,4 +14,8 @@ public interface FragmentInterface {
     void removeItem(ModularCube modularCube);
 
     void addItem(ModularCube modularCube);
+
+    void addCube3D(long id);
+
+    void deleteCube3D(Long aLong);
 }

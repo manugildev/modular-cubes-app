@@ -29,9 +29,6 @@ public class TcpClient {
     // used to read messages from the server
     private BufferedReader mBufferIn;
 
-    /**
-     * Constructor of the class. OnMessagedReceived listens for the messages received from server
-     */
     public TcpClient(OnMessageReceived listener, String gateway) {
         mMessageListener = listener;
         this.serverIP = gateway;
@@ -103,9 +100,7 @@ public class TcpClient {
                 Log.e("TCP", "S: Error", e);
 
             } finally {
-                //the socket must be closed. It is not possible to reconnect to this socket
-                // after it is closed, which means a new socket instance has to be created.
-                socket.close();
+                 socket.close();
             }
 
         } catch (Exception e) {

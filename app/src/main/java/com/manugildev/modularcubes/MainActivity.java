@@ -5,7 +5,9 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
+import com.eftimoff.viewpagertransformers.StackTransformer;
 import com.manugildev.modularcubes.data.models.ModularCube;
+import com.manugildev.modularcubes.fragments.FourthFragment;
 import com.manugildev.modularcubes.fragments.FragmentInterface;
 import com.manugildev.modularcubes.fragments.MainActivityFragment;
 import com.manugildev.modularcubes.fragments.MessageFragment;
@@ -26,8 +28,8 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
         ViewPager vpPager = (ViewPager) findViewById(R.id.vpPager);
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         vpPager.setAdapter(adapterViewPager);
-        vpPager.setOffscreenPageLimit(4);
-        vpPager.setCurrentItem(3);
+        vpPager.setOffscreenPageLimit(5);
+        vpPager.setCurrentItem(1);vpPager.setPageTransformer(true, new StackTransformer());
     }
 
     @Override
@@ -35,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
         finish();
         super.onBackPressed();
     }
-
 
     public MessageFragment getMessagesFragment() {
         return (MessageFragment) adapterViewPager.getItem(0);
@@ -51,6 +52,10 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
 
     public ThirdFragment getThirdFragment() {
         return (ThirdFragment) adapterViewPager.getItem(3);
+    }
+
+    public FourthFragment getFourthFragment() {
+        return (FourthFragment) adapterViewPager.getItem(4);
     }
 
     @Override
@@ -71,6 +76,16 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
     }
 
     @Override
+    public void addCube3D(long id) {
+        getFourthFragment().onAddedCube(id);
+    }
+
+    @Override
+    public void deleteCube3D(Long id) {
+        getFourthFragment().onCubeDeleted(id);
+    }
+
+    @Override
     public void sendMessage(String message) {
         getMainFragment().sendMessage(message);
     }
@@ -79,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements FragmentInterface
     public void updatedCube(ModularCube cube) {
         getSecondFragment().onUpdatedCube(cube);
         getThirdFragment().onUpdatedCube(cube);
+        getFourthFragment().onUpdatedCube(cube.getDeviceId());
     }
 
     @Override

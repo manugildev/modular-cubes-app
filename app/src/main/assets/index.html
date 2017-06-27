@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - trackball controls</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #000;
+            font-family: Monospace;
+            font-size: 13px;
+            text-align: center;
+            font-weight: bold;
+            background-color: #fff;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        #info {
+            color: #000;
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 5px;
+        }
+
+        a {
+            color: red;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+
+    <script src="vendor/three/Three.js"></script>
+
+    <script src="vendor/controls/TrackballControls.js"></script>
+    <script type='text/javascript' src='js/Tween.js'></script>
+
+    <script src="vendor/three/Detector.js"></script>
+    <script src="vendor/THREE.MeshLine.js"></script>
+    <script src="vendor/threex/Threex.domevents.js"></script>
+
+    <script>
+        if (!Detector.webgl) Detector.addGetWebGLMessage();
+        var container, stats;
+        var camera, controls, scene, renderer;
+        var colors = [0xe74c3c, 0x2980b9, 0x8e44ad, 0x2ecc71, 0xf1c40f, 0xe67e22, 0x1abc9c];
+        var cross;
+        var cubes = [];
+        init();
+        animate();
+
+        ModularCube = function (id, depth, parent) {
+            this.depth = 0;
+            this.id = 0;
+            this.parent = 0;
+            this.mesh = 0;
+            this.line = 0;
+        };
+
+        function randomSpherePoint (x0, y0, z0, radius) {
+            var u = Math.random();
+            var v = Math.random();
+            var theta = 2 * Math.PI * u;
+            var phi = Math.acos(2 * v - 1);
+            var x = x0 + (radius * Math.sin(phi) * Math.cos(theta));
+            var y = y0 + (radius * Math.sin(phi) * Math.sin(theta));
+            var z = z0 + (radius * Math.cos(phi));
+            return [x, y, z];
+        }
+
+        function getCubeWithId (cubes, parent) {
+            for (var j = 0; j < cubes.length; j++) {
+                if (parseInt(cubes[j].id) === parseInt(parent)) {
+                    return cubes[j];
+                }
+            }
+            return undefined;
+        }
+        function init () {
+
+            if (Detector.webgl) {
+                renderer = new THREE.WebGLRenderer({antialiasing: true});
+                renderer.setClearColor(0xf0f0f0);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.sortObjects = false;
+
+            }
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+            var domEvents = new THREEx.DomEvents(camera, renderer.domElement);
+            camera.position.z = 500;
+            controls = new THREE.TrackballControls(camera);
+            controls.rotateSpeed = 4.0;
+            controls.zoomSpeed = 1.2;
+            controls.panSpeed = 1;
+            controls.noZoom = false;
+            controls.noPan = false;
+            controls.staticMoving = true;
+            controls.dynamicDampingFactor = 0.3;
+            controls.keys = [65, 83, 68];
+            controls.addEventListener('change', render);
+            // world
+            scene = new THREE.Scene();
+            //scene.fog = new THREE.FogExp2(0x2c3e50, 0.002);
+
+            //addMember(1, 1, 0);
+            //addMember(2, 2, 1);
+            //addMember(3, 2, 1);
+            //addMember(4, 3, 2);
+            //addMember(5, 3, 2);
+            //addMember(6, 4, 3);
+            //addMember(7, 4, 3);
+            //addMember(8, 5, 4);
+            //addMember(9, 6, 8);
+
+            scene.add(new THREE.AmbientLight(0x505050));
+            var light = new THREE.SpotLight(0xffffff, 1.5);
+            light.position.set(0, 500, 2000);
+            light.castShadow = true;
+            light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(50, 1, 200, 10000));
+            light.shadow.bias = -0.00022;
+            light.shadow.mapSize.width = 2048;
+            light.shadow.mapSize.height = 2048;
+            scene.add(light);
+
+            // renderer
+
+            container = document.getElementById('container');
+            container.appendChild(renderer.domElement);
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousedown', onMouseDown, false);
+
+        }
+
+        function onWindowResize () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            controls.handleResize();
+            render();
+        }
+        function animate () {
+            requestAnimationFrame(animate);
+
+            render();
+            controls.update();
+        }
+        function render () {
+
+            for (var i = 0; i < cubes.length; i++) {
+                updateLines(cubes[i]);
+            }
+            TWEEN.update();
+
+            renderer.render(scene, camera);
+
+        }
+
+        function updateLines (cube) {
+            var cube2 = getCubeWithId(cubes, cube.parent);
+            if (cube2 !== undefined && cube.line === 0) {
+                var geometry = new THREE.Geometry();
+                geometry.vertices.push(cube.mesh.position);
+                geometry.vertices.push(cube2.mesh.position);
+                var line = new MeshLine();
+                line.setGeometry(geometry);
+                var material = new MeshLineMaterial({
+                    useMap:    false,
+                    color:     new THREE.Color(0x34495e),
+                    opacity:   0.5,
+                    lineWidth: 3,
+                    near:      camera.near,
+                    far:       camera.far
+                });
+                var mesh = new THREE.Mesh(line.geometry, material);
+                mesh.name = cube.id + 'line';
+                cube.line = mesh;
+                scene.add(mesh);
+            }
+
+        }
+
+        function addMember (id, depth, parent) {
+            var cube = {depth: depth, id: id, parent: parent, line: 0};
+            if (getCubeWithId(cubes, id) !== undefined) {
+                deleteMember(id);
+            }
+
+            addCubeToScene(cube);
+            cubes.push(cube);
+            console.log(cubes.length);
+
+        }
+        function addCubeToScene (cube) {
+
+            var material = new THREE.MeshLambertMaterial({
+                color: colors[cube.depth - 1]
+            });
+            //var geometry = new THREE.SphereGeometry(10- (((cubes[i].depth - 1))), 100, 100);
+            var size = 20 - (((cube.depth - 1))) * 1.4;
+            var geometry = new THREE.SphereGeometry(size, size, size);
+            var mesh = new THREE.Mesh(geometry, material);
+            mesh.name = cube.id + '';
+            var randomPoints = randomSpherePoint(0, 0, 0, ((cube.depth - 1)) * 60);
+            mesh.rotation.x = Math.random() * 2 * Math.PI;
+            mesh.rotation.y = Math.random() * 2 * Math.PI;
+            mesh.rotation.z = Math.random() * 2 * Math.PI;
+
+            mesh.position.x = randomPoints[0];
+            mesh.position.y = randomPoints[1];
+            mesh.position.z = randomPoints[2];
+            cube.mesh = mesh;
+            mesh.updateMatrix();
+            mesh.matrixAutoUpdate = true;
+
+            scene.add(mesh);
+
+        }
+
+        document.onkeydown = checkKey;
+
+        function checkKey (e) {
+            e = e || window.event;
+            if (e.keyCode == '38') {
+                addMember(886361424, 1, 0);
+            } else if (e.keyCode == '49') {
+                rotate(cubes[cubes.length - 1], 1);
+            } else if (e.keyCode == '50') {
+                rotate(cubes[cubes.length - 1], 2);
+            } else if (e.keyCode == '51') {
+                rotate(cubes[cubes.length - 1], 3);
+            } else if (e.keyCode == '52') {
+                rotate(cubes[cubes.length - 1], 4);
+            } else if (e.keyCode == '53') {
+                rotate(cubes[cubes.length - 1], 5);
+            } else if (e.keyCode == '54') {
+                rotate(cubes[cubes.length - 1], 6);
+            }
+
+        }
+
+        function rotate (id, number) {
+
+            var index = 0;
+            for (var c = 0; c < cubes.length; c++) {
+                if (cubes[c].id === id) {
+                    index = c;
+                    break;
+                }
+            }
+
+            var cube = cubes[index];
+            var cubeScale = {
+                x: 1,
+                y: 1,
+                z: 1
+            };
+            var target = {};
+
+            if (number === 1) {
+                target = {x: 1.3, y: 1.3, z: 1.3};
+            } else if (number === 6) {
+                target = {x: 1.3, y: 1.3, z: 1.3};
+            } else if (number === 3) {
+                target = {x: 1.3, y: 1.3, z: 1.3};
+            } else if (number === 4) {
+                target = {x: 1.3, y: 1.3, z: 1.3};
+            } else if (number === 5) {
+                target = {x: 1.3, y: 1.3, z: 1.3};
+            } else if (number === 2) {
+                target = {x: 1.3, y: 1.3, z: 1.3};
+            }
+
+            var tween = new TWEEN.Tween(cubeScale).to(target, 100).repeat(1).yoyo(true);
+            tween.onUpdate(function () {
+                cube.mesh.scale.x = cubeScale.x;
+                cube.mesh.scale.y = cubeScale.y;
+                cube.mesh.scale.z = cubeScale.z;
+            });
+            tween.start();
+
+            //var q = new THREE.Quaternion();
+            //q.setFromAxisAngle(new THREE.Quaternion(dy,dx,0).normalize(), THREE.Math.degToRad(90));
+            //cube.quaternion.premultiply(q);
+        }
+
+        function deleteMember (id) {
+            console.log('ID:' + id);
+
+            var selectedObject = scene.getObjectByName(id + '');
+            selectedObject.parent.remove(selectedObject);
+
+            selectedObject = scene.getObjectByName(id + 'line');
+            if (selectedObject != undefined)
+                selectedObject.parent.remove(selectedObject);
+
+            var index = 0;
+            for (var c = 0; c < cubes.length; c++) {
+                if (cubes[c].id === id) {
+                    index = c + 1;
+                    break;
+                }
+            }
+
+            cubes[index] = {};
+            cubes.splice(index, 1);
+            cubes.length -= 1;
+            console.log(cubes);
+
+        }
+
+        function onMouseDown (e) {
+            for (var i = 0; i < cubes.length; i++) {
+                var object = cubes[i].mesh;
+                var vectorMouse = new THREE.Vector3( //vector from camera to mouse
+                  -(window.innerWidth / 2 - e.clientX) * 2 / window.innerWidth,
+                  (window.innerHeight / 2 - e.clientY) * 2 / window.innerHeight,
+                  -1 / Math.tan(22.5 * Math.PI / 180)); //22.5 is half of camera frustum angle 45 degree
+                vectorMouse.applyQuaternion(camera.quaternion);
+                vectorMouse.normalize();
+
+                var vectorObject = new THREE.Vector3(); //vector from camera to object
+                vectorObject.set(object.x - camera.position.x,
+                  object.y - camera.position.y,
+                  object.z - camera.position.z);
+                vectorObject.normalize();
+                if (vectorMouse.angleTo(vectorObject) * 180 / Math.PI < 1) {
+                    console.log('Clicked: ' + cubes[i].id);
+
+                }
+            }
+        }
+
+    </script>
+
+</body>
+</html>

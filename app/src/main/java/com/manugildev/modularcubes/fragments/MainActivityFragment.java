@@ -91,7 +91,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     CircularProgressBar mCircularProgressBar;
     Button mStartB, mONB, mOFFB;
 
-
     BroadcastReceiver receiver;
     WifiManager wifiManager;
     String gateway;
@@ -111,10 +110,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public long firstCubeId = 0;
     public long sendTime;
 
-
     public ArrayList<Long> currentIds = new ArrayList<>();
     public ArrayList<Long> previousIds = new ArrayList<>();
-    public ArrayList<Integer> soundIds = new ArrayList<>();
     public LinearLayout mNoCubesTV;
 
     private Runnable myRunnable;
@@ -140,6 +137,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     private int positiveSound;
     private int negativeSound;
     private int endSound;
+    private int gameOverSound;
     private float volume;
 
     private FragmentInterface mCallback;
@@ -179,7 +177,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                                 TCPServerThread.gotConnections = false;
                                 sendTime = System.currentTimeMillis();
                                 TCPServerThread.sendMessage("connections");
-                                delay = 1000;
+                                delay = 1300;
                             } else {
                                 if (TCPServerThread.connectionTries < 10) {
                                     TCPServerThread.connectionTries++;
@@ -309,6 +307,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         this.negativeSound = this.soundPool.load(activity, R.raw.negative, 1);
         // Load sound file (end.wav)
         this.endSound = this.soundPool.load(activity, R.raw.end, 1);
+
+        this.gameOverSound = this.soundPool.load(activity, R.raw.gameover, 1);
     }
 
     public void playPositiveSound() {
@@ -326,6 +326,15 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             float rightVolumn = volume;
             // Play sound of gunfire. Returns the ID of the new stream.
             int streamId = this.soundPool.play(this.endSound, leftVolumn, rightVolumn, 1, 0, 1f);
+        }
+    }
+
+    public void playGameOverSound() {
+        if (loaded) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+            // Play sound of gunfire. Returns the ID of the new stream.
+            int streamId = this.soundPool.play(this.gameOverSound, leftVolumn, rightVolumn, 1, 0, 1f);
         }
     }
 
@@ -369,6 +378,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
             public void onFinish() {
                 mCircularProgressBar.setProgress(0);
                 timeLeft = 0;
+                playEndSound();
                 updateNumberOfCubesTextView();
                 pauseGameA();
             }
@@ -381,7 +391,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         int tempNumber;
         do {
             int numberOfCubes = activity.mData.size();
-            tempNumber = r.nextInt(((numberOfCubes * 6) + 1) - numberOfCubes) + numberOfCubes;
+            tempNumber = r.nextInt(((numberOfCubes * 5) + 2) - numberOfCubes) + numberOfCubes;
         } while (currentNumber == tempNumber);
         currentNumber = tempNumber;
         //mNumberTV.setText(currentNumber + "");
@@ -394,7 +404,8 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                 Long key = entry.getKey();
                 ModularCube cube = entry.getValue();
                 //gridLayout.setVisibility(View.VISIBLE);
-                YoYo.with(Techniques.FadeOut).duration(0).playOn(mNoCubesTV);
+                firstAnimation();
+
                 if (!lastRefresh.containsKey(key)) {
                     createViewForCube(cube);
                     gridLayout.addView(cube.getView(), new LayoutParams(0, 0));
@@ -402,6 +413,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
                     refreshGridLayout();
                     activity.mData.put(key, cube);
                     mCallback.addItem(cube);
+                    mCallback.addCube3D(cube.getDeviceId());
                     lastRefresh.put(key, cube);
                 } else {
                     if (activity.mData.get(cube.getDeviceId()).updateCube(cube)) {
@@ -455,6 +467,7 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         touchFrameLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                sendTime = System.currentTimeMillis();
                 TCPServerThread.sendActivate(cube, true);
             }
         });
@@ -723,7 +736,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         }
     }
 
-
     private void startGameA() {
         if (activity.mData.size() > 0) {
             mStartB.setText("PAUSE");
@@ -778,7 +790,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mStartB.setText("START");
         stopAllNodes();
     }
-
 
     private void startGame() {
         resetVariables();
@@ -853,7 +864,6 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         mScoreTV.setText(text);
     }
 
-
     private void checkSumOfCubes() {
         int total = 0;
         ModularCube tempCube;
@@ -870,29 +880,34 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         }
     }
 
-    public void addCube(String nodeId) {
+    public void addCube(String nodeId, int depth, long parent) {
         mCallback.communicateToFragment2();
         long id = Long.valueOf(nodeId);
+
         ModularCube c = new ModularCube(fragment);
         c.setIp("-1");
         c.setDeviceId(id);
         c.setActivity(this);
         c.setCurrentOrientation(1);
         c.setActivated(false);
+        c.setDepth(depth);
+        c.setParent(parent);
+        System.out.println("Depth1: " + depth);
         if (activity.mData.containsKey(id)) {
             removeCube(String.valueOf(id));
         }
         activity.mData.put(id, c);
         refreshData();
-    }
 
+    }
 
     public void updateInformation(TreeMap<Long, ModularCube> cubeInformation) {
         Long key = cubeInformation.firstKey();
         if (activity.mData.containsKey(key))
             if (cubeInformation.firstEntry().getValue().getCurrentOrientation() !=
-                    activity.mData.get(key).getCurrentOrientation())
+                    activity.mData.get(key).getCurrentOrientation()) {
                 mCallback.updatedCube(cubeInformation.firstEntry().getValue());
+            }
 
         if (playing) {
             if (cubeInformation.firstKey() == currentCube) {
@@ -929,12 +944,12 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         startTimer(currentTime);
     }
 
-
     public void removeCube(String nodeId) {
         mCallback.communicateToFragment2();
         long id = Long.valueOf(nodeId);
         if (activity.mData.get(id) != null) {
             mCallback.removeItem(activity.mData.get(id));
+            mCallback.deleteCube3D(Long.valueOf(nodeId));
             View namebar = gridLayout.findViewById(activity.mData.get(id).getViewId());
             if (namebar != null) {
                 ViewGroup parent = (ViewGroup) namebar.getParent();
@@ -952,8 +967,9 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     public void calculateDepth(String json) throws JSONException {
         currentIds.clear();
         JSONArray jsonArray = new JSONArray(json);
+        long firstCubeId = findCubeWithDepth(1);
         for (int i = 0, size = jsonArray.length(); i < size; i++) {
-            parseArrayElement(jsonArray.getJSONObject(i), 1);
+            parseArrayElement(jsonArray.getJSONObject(i), 1, firstCubeId);
         }
 
         for (long element : previousIds) {
@@ -965,24 +981,36 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
         refreshData();
     }
 
-    private void parseArrayElement(JSONObject jsonObject, int depth) throws JSONException {
+    private long findCubeWithDepth(int i) {
+        for (Map.Entry<Long, ModularCube> entry : activity.mData.entrySet()) {
+            ModularCube cube = entry.getValue();
+            if (cube.getDepth() == 1) {
+                return cube.getDeviceId();
+            }
+        }
+        return 0;
+    }
+
+    private void parseArrayElement(JSONObject jsonObject, int depth, long parent) throws JSONException {
         String nodeId = jsonObject.getString("nodeId");
         JSONArray subs = jsonObject.getJSONArray("subs");
         depth += 1;
         for (int i = 0, size = subs.length(); i < size; i++) {
-            parseArrayElement(subs.getJSONObject(i), depth);
+            parseArrayElement(subs.getJSONObject(i), depth, Long.parseLong(nodeId));
         }
         long id = Long.valueOf(nodeId);
         if (activity.mData.containsKey(id)) {
             activity.mData.get(id).setDepth(depth);
+            activity.mData.get(id).setParent(parent);
         } else {
-            addCube(nodeId);
+            addCube(nodeId, depth, parent);
             activity.mData.get(id).setDepth(depth);
+            activity.mData.get(id).setParent(parent);
+
         }
         currentIds.add(id);
 
     }
-
 
     public void setDisconnected() {
         System.out.println("Disconnected");
@@ -1049,9 +1077,10 @@ public class MainActivityFragment extends Fragment implements CompoundButton.OnC
     }
 
     public void firstAnimation() {
-
-        YoYo.with(Techniques.FadeIn).duration(500).playOn(mCardView);
-        YoYo.with(Techniques.FadeOut).duration(300).playOn(mNoCubesTV);
+        if (mNoCubesTV.getAlpha() > 0.90 && !playing)
+            YoYo.with(Techniques.FadeOut).duration(0).playOn(mNoCubesTV);
+        if (mCardView.getAlpha() < 0.10 && !playing)
+            YoYo.with(Techniques.FadeIn).duration(500).playOn(mCardView);
 
     }
 }

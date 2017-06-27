@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -30,7 +31,9 @@ import com.manugildev.modularcubes.ui.third.ThirdRecyclerViewAdapter;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeMap;
 
 import butterknife.BindView;
@@ -59,7 +62,7 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     private ArrayList<Long> usedCubes = new ArrayList<>();
     private ArrayList<Point> sequence = new ArrayList<>();
     private ArrayList<Player> winners = new ArrayList<>();
-    private String[] names = new String[]{"Max", "Manu", "Henrik", "Christina", "Claire", "Markus", "Conrad", "JBalvin", "Nacho", "Joseff", "Jessica", "Adriana", "Manolo"};
+    private ArrayList<String> names = new ArrayList<>();
 
     //private Thread illuminateCubesThread;
     private CountDownTimer mCountDownTimer;
@@ -111,6 +114,20 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.activity = (MainActivity) getActivity();
+        names.add("Max");
+        names.add("Manu");
+        names.add("Henrik");
+        names.add("Chirstina");
+        names.add("Markus");
+        names.add("Claire");
+        names.add("Conrad");
+        names.add("Jessica");
+        names.add("Adriana");
+        names.add("Nacho");
+        names.add("Luis");
+        names.add("Joseff");
+        shuffleArray(names);
+
     }
 
     @Override
@@ -124,7 +141,6 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
         this.sequence.add(new Point(5, 2));
         this.sequence.add(new Point(4, 4));
         this.sequence.add(new Point(6, 1));
-
         setChartData();
     }
 
@@ -143,21 +159,21 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     // Callback Stuff
     public void onUpdatedCube(ModularCube cube) {
         if (gameState == GameState.PLAYING) {
-            Player p = adapter.getPlayerByCube(cube);
-            if (p != null) {
-                if (p.areBothOnSequence() && p.getProgress() != 100) {
-                    int id = p.getId();
+            Player cPlayer = adapter.getPlayerByCube(cube);
+            if (cPlayer != null) {
+                if (cPlayer.areBothOnSequence() && cPlayer.getProgress() != 100) {
+                    int id = cPlayer.getId();
                     activity.getSecondFragment().playPositiveSound();
-                    p.addTime(totalTime, timeLeft);
-                    int progress = (int) ((1 - ((float) p.getCubeSequence().size() / (float) sequence.size())) * 100);
-                    if (p.getCubeSequence().size() > 0) {
-                        p.setProgress(progress);
+                    cPlayer.addTime(totalTime, timeLeft);
+                    int progress = (int) ((1 - ((float) cPlayer.getCubeSequence().size() / (float) sequence.size())) * 100);
+                    if (cPlayer.getCubeSequence().size() > 0) {
+                        cPlayer.setProgress(progress);
                     } else {
-                        winners.add(p);
-                        p.setProgress(0);
+                        winners.add(cPlayer);
+                        cPlayer.setProgress(0);
                         if (winners.size() == adapter.getPlayers().size()) endGame();
                         else activity.getSecondFragment().playPowerUpSound();
-                        animatePlayerON(id, "AWESOME!", 1200);
+                        animatePlayerON(cPlayer.getId(), "AWESOME!", 1200);
                         //recyclerView.scrollToPosition(id);
 
 
@@ -208,7 +224,7 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
                 gameState = GameState.PLAYING;
                 animateMainTextView("Playing", 250);
                 setSequenceToAll();
-                adapter.notifyDataSetChanged();
+                adapter.notifyDataSetChanged();/**/
                 startTimer(totalTime);
             } else {
                 Toast.makeText(activity, "Add some Players!", Toast.LENGTH_SHORT).show();
@@ -279,7 +295,8 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
             return;
         }
         illuminateTheCubes(cube1, cube2);
-        Player p = new Player(this, names[adapter.getItemCount()], adapter.getItemCount(), 0, cube1, cube2, getMatColor("500"));
+        Player p = new Player(this, moveArray(names), adapter.getItemCount(), 0, cube1, cube2, getMatColor("500"));
+        //Toast.makeText(activity, "ID: " + p.getId(), Toast.LENGTH_SHORT).show();
         p.setProgress(100);
         adapter.addItem(p);
         animateMainTextView("Press the PLAY Button!", 250);
@@ -419,24 +436,44 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
     }
 
     private void animatePlayerON(int id, final String text, final int time) {
-        View playerView = recyclerView.findViewHolderForAdapterPosition(id).itemView;
-        FrameLayout playerFrame = (FrameLayout) playerView.findViewById(R.id.playerFrameLayout);
-        TextView playerTextView = (TextView) playerView.findViewById(R.id.playerTextView);
-        activity.runOnUiThread(() -> {
-            playerTextView.setText(text);
-            YoYo.with(Techniques.FadeIn).duration((long) (time / 10)).playOn(playerFrame);
-            YoYo.with(Techniques.FadeInLeft).duration((long) (time / 2.5)).playOn(playerTextView);
+        //Toast.makeText(activity, "ID: " + id, Toast.LENGTH_SHORT).show();
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
+                    if (recyclerView.findViewHolderForAdapterPosition(id) != null) {
+                        View playerView = recyclerView.findViewHolderForAdapterPosition(id).itemView;
+                        FrameLayout playerFrame = (FrameLayout) playerView.findViewById(R.id.playerFrameLayout);
+                        TextView playerTextView = (TextView) playerView.findViewById(R.id.playerTextView);
+                        activity.runOnUiThread(() -> {
+                            playerTextView.setText(text);
+                            YoYo.with(Techniques.FadeIn).duration((long) (time / 10)).playOn(playerFrame);
+                            YoYo.with(Techniques.FadeInLeft).duration((long) (time / 2.5)).playOn(playerTextView);
+                        });
+                    }
+                    recyclerView.removeOnScrollListener(this);
+                }
+            }
         });
+
+        recyclerView.smoothScrollToPosition(id);
+
+
     }
 
     private void animatePlayerOFF(int id, final int time, int delay) {
-        View playerView = recyclerView.findViewHolderForAdapterPosition(id).itemView;
-        FrameLayout playerFrame = (FrameLayout) playerView.findViewById(R.id.playerFrameLayout);
-        TextView playerTextView = (TextView) playerView.findViewById(R.id.playerTextView);
-        activity.runOnUiThread(() -> {
-            YoYo.with(Techniques.FadeOut).duration((long) (time / 2.5)).delay(delay).playOn(playerFrame);
-            YoYo.with(Techniques.FadeOutRight).duration((long) (time / 2.5)).delay(time).delay(delay).playOn(playerTextView);
-        });
+        // Toast.makeText(activity, "ID: " + id, Toast.LENGTH_SHORT).show();
+        if (recyclerView.findViewHolderForAdapterPosition(id) != null) {
+            View playerView = recyclerView.findViewHolderForAdapterPosition(id).itemView;
+            FrameLayout playerFrame = (FrameLayout) playerView.findViewById(R.id.playerFrameLayout);
+            TextView playerTextView = (TextView) playerView.findViewById(R.id.playerTextView);
+            activity.runOnUiThread(() -> {
+                YoYo.with(Techniques.FadeOut).duration((long) (time / 2.5)).delay(delay).playOn(playerFrame);
+                YoYo.with(Techniques.FadeOutRight).duration((long) (time / 2.5)).delay(time).delay(delay).playOn(playerTextView);
+            });
+        }
     }
 
     private void animateTimeView(final String text, final int time) {
@@ -464,12 +501,22 @@ public class ThirdFragment extends Fragment implements ThirdRecyclerViewAdapter.
         activity.runOnUiThread(() -> {
             YoYo.with(Techniques.FadeIn).duration((long) (startAnimation / 5)).playOn(chartFrame);
             YoYo.with(Techniques.FadeOut).duration((long) (startAnimation)).delay(stayFor).playOn(chartFrame);
-
             YoYo.with(Techniques.FadeInLeft).duration((long) (startAnimation)).playOn(chartCardView);
             YoYo.with(Techniques.FadeOutRight).duration((long) (startAnimation)).delay(stayFor).playOn(chartCardView);
         });
     }
 
+    private static void shuffleArray(ArrayList<String> array) {
+        long seed = System.nanoTime();
+        Collections.shuffle(array, new Random(seed));
+    }
+
+    private static String moveArray(ArrayList<String> array) {
+        String temp = array.remove(0);
+        array.add(temp);
+        return temp;
+
+    }
 
 }
 

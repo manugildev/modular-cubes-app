@@ -7,7 +7,6 @@ import android.util.AttributeSet;
 
 public class SquareLayout extends CardView {
 
-
     public SquareLayout(Context context) {
         super(context);
     }

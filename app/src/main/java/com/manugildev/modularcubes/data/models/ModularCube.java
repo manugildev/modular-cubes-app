@@ -13,15 +13,15 @@ public class ModularCube {
     private View view;
     private MainActivityFragment activity;
     private int viewId;
-    private int depth;
+    private int depth = 1;
     private long now = 0;
     private String color;
+    private long parent = 0;
 
     public ModularCube(MainActivityFragment activity) {
         this.activity = activity;
         //this.cubeAudio = new CubeAudio(this, activity.getActivity().getApplicationContext(), soundId);
     }
-
 
     public boolean updateCube(ModularCube cube) {
         //System.out.println("UpdateCube - " + cube.getDeviceId() + " " +cube.getCurrentOrientation());
@@ -116,7 +116,7 @@ public class ModularCube {
     }
 
     public void setDepth(int depth) {
-        if (activity != null && viewId != 0 && this.depth != depth) {
+        if (activity != null && viewId != 0) {
             activity.changeCubeDepth(getViewId(), depth);
         }
         this.depth = depth;
@@ -125,8 +125,16 @@ public class ModularCube {
     public void setColor(String color) {
         this.color = color;
     }
-    
-    public String getColor(){
+
+    public String getColor() {
         return this.color;
+    }
+
+    public void setParent(long parent) {
+        this.parent = parent;
+    }
+
+    public long getParent() {
+        return parent;
     }
 }

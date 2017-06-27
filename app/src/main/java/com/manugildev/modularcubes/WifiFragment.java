@@ -86,7 +86,6 @@ public class WifiFragment extends Fragment {
     private void startUDP(String gateway) {
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_wifi, container, false);

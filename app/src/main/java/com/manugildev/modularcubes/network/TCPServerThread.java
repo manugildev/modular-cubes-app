@@ -67,6 +67,7 @@ public class TCPServerThread extends Thread {
         DatagramPacket send_packet;
         try {
             send_packet = new DatagramPacket(send_data, str.length(), InetAddress.getByName(gateway), 8266);
+            fragment.sendTime = System.currentTimeMillis();
             if (!socket.isClosed()) {
                 socket.send(send_packet);
                 System.out.println("Message sent " + message);
@@ -97,12 +98,6 @@ public class TCPServerThread extends Thread {
         try {
             String msg = createJsonActivateMessage(cube, r);
             timeSend = System.currentTimeMillis();
-            fragment.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    fragment.mTimeConnectionsTv.setText("0");
-                }
-            });
             sendMessage(msg);
             return true;
         } catch (JSONException e) {
@@ -156,7 +151,9 @@ public class TCPServerThread extends Thread {
         return modularCubes;
     }
 
-
+    //================================================================================
+    // General Functions
+    //================================================================================
     @Override
     public void run() {
         running = true;
@@ -184,7 +181,8 @@ public class TCPServerThread extends Thread {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            activity.getMessagesFragment().addItem(received);
+                            if (!received.contains("connections"))
+                                activity.getMessagesFragment().addItem(received);
                         }
                     });
                 }
@@ -218,12 +216,13 @@ public class TCPServerThread extends Thread {
     }
 
     private void parseReceivedData(final String received) {
+        final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
         if (received.startsWith("initial=")) {
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     fragment.firstCubeId = 0;
-                    fragment.firstAnimation();
+                    //fragment.firstAnimation();
                     String d = received.replace("initial=", "");
                     TreeMap<Long, ModularCube> modularCube = parseJson(d);
                     fragment.firstCubeId = modularCube.firstKey();
@@ -255,23 +254,25 @@ public class TCPServerThread extends Thread {
             fragment.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    final String elapsed = String.valueOf(System.currentTimeMillis() - timeSend);
                     System.out.println("ELAPSED: " + elapsed);
                     String d = received.replace("information=", "");
                     fragment.updateInformation(parseJson(d));
+                    fragment.getActivity().runOnUiThread(() -> {
+                        fragment.mTimeConnectionsTv.setText(elapsed);
+
+                    });
                 }
             });
             weGotSomething = true;
         } else if (received.startsWith("connections=")) {
             gotConnections = true;
             connectionTries = 0;
-            final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
             //Log.d("TimeElapsed", elapsed);
             //Log.d("Connections", received.replace("connections=", ""));
             fragment.getActivity().runOnUiThread(() -> {
                 try {
-                    fragment.mTimeConnectionsTv.setText(elapsed);
-                    fragment.sendTime = 0;
+                    //fragment.mTimeConnectionsTv.setText(elapsed);
+                    //fragment.sendTime = 0;
                     fragment.calculateDepth(received.replace("connections=", ""));
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -279,7 +280,6 @@ public class TCPServerThread extends Thread {
             });
 
         } else if (received.startsWith("all_nodes=")) {
-            final String elapsed = String.valueOf(System.currentTimeMillis() - fragment.sendTime);
             fragment.getActivity().runOnUiThread(() -> {
                 fragment.sendTime = 0;
                 fragment.mTimeConnectionsTv.setText(elapsed);
@@ -293,12 +293,7 @@ public class TCPServerThread extends Thread {
         try {
             String msg = createJsonActivateMessage(cube, b, r);
             timeSend = System.currentTimeMillis();
-            fragment.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    fragment.mTimeConnectionsTv.setText("0");
-                }
-            });
+
             sendMessage(msg);
             return true;
         } catch (JSONException e) {

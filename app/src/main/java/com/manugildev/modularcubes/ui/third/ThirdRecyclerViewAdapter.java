@@ -29,13 +29,11 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
     private ItemClickListener mClickListener;
     private Context context;
 
-    // data is passed into the constructor
     public ThirdRecyclerViewAdapter(Context context) {
         this.mInflater = LayoutInflater.from(context);
         this.context = context;
     }
 
-    // inflates the cell layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.fragment_third_player_item, parent, false);
@@ -48,7 +46,6 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         Player player = playerData.get(position);
         int color = Color.parseColor(playerData.get(position).getColor());
         holder.numberTextView.setText(String.valueOf(player.getNumber()));
-        holder.numberTextView.setTextColor(color);
         holder.progressBar1.setColor(color);
         holder.progressBar1.setBackgroundColor(ColorUtils.setAlphaComponent(color, 60));
         holder.progressBar2.setColor(color);
@@ -56,9 +53,10 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         holder.progressBar1.setProgressWithAnimation(player.getProgress(), 800);
         holder.progressBar2.setProgressWithAnimation(player.getProgress(), 800);
         holder.playerFrame.setBackgroundColor(color);
+        holder.nameTextView.setText(player.getName());
+        holder.indicatorCardView.setCardBackgroundColor(color);
     }
 
-    // total number of cells
     @Override
     public int getItemCount() {
         return playerData.size();
@@ -71,7 +69,7 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
 
     public void removeAll() {
         if (playerData.size() > 0)
-            for (int i = 0; i < playerData.size(); i++) {
+            for (int i = playerData.size() - 1; i >= 0; i--) {
                 playerData.remove(i);
                 notifyItemRemoved(i);
             }
@@ -87,6 +85,8 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
                 p.getCube1().setCurrentOrientation(cube.getCurrentOrientation());
                 return p;
             }
+        }
+        for (Player p : playerData) {
             if (cube.getDeviceId() == p.getCube2().getDeviceId()) {
                 p.getCube2().setCurrentOrientation(cube.getCurrentOrientation());
                 return p;
@@ -95,7 +95,6 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         return null;
     }
 
-    // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @BindView(R.id.numberTextView)
         public TextView numberTextView;
@@ -109,6 +108,10 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         public FrameLayout playerFrame;
         @BindView(R.id.playerTextView)
         public TextView playerTextView;
+        @BindView(R.id.nameTextView)
+        public TextView nameTextView;
+        @BindView(R.id.indicatorCardView)
+        public CardView indicatorCardView;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -127,17 +130,14 @@ public class ThirdRecyclerViewAdapter extends RecyclerView.Adapter<ThirdRecycler
         }
     }
 
-    // convenience method for getting data at click position
     public Player getItem(int id) {
         return playerData.get(id);
     }
 
-    // allows clicks events to be caught
     public void setClickListener(ItemClickListener itemClickListener) {
         this.mClickListener = itemClickListener;
     }
 
-    // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick(View view, int position);
     }

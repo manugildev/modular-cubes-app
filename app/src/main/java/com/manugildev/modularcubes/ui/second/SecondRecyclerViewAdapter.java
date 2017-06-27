@@ -22,14 +22,12 @@ public class SecondRecyclerViewAdapter extends RecyclerView.Adapter<SecondRecycl
     private ItemClickListener mClickListener;
     private Context context;
 
-    // data is passed into the constructor
     public SecondRecyclerViewAdapter(Context context, ArrayList<ModularCube> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
         this.context = context;
     }
 
-    // inflates the cell layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.moto_tile_item, parent, false);
@@ -37,7 +35,6 @@ public class SecondRecyclerViewAdapter extends RecyclerView.Adapter<SecondRecycl
         return viewHolder;
     }
 
-    // binds the data to the textview in each cell
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         long id = mData.get(position).getDeviceId();
@@ -46,7 +43,6 @@ public class SecondRecyclerViewAdapter extends RecyclerView.Adapter<SecondRecycl
         holder.cubeProgressBar.setBackgroundColor(ColorUtils.setAlphaComponent(Color.parseColor(mData.get(position).getColor()), 60));
     }
 
-    // total number of cells
     @Override
     public int getItemCount() {
         return mData.size();
@@ -72,8 +68,6 @@ public class SecondRecyclerViewAdapter extends RecyclerView.Adapter<SecondRecycl
         return -1;
     }
 
-
-    // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView myTextView;
         public CircularProgressBar cubeProgressBar;
@@ -91,17 +85,14 @@ public class SecondRecyclerViewAdapter extends RecyclerView.Adapter<SecondRecycl
         }
     }
 
-    // convenience method for getting data at click position
     public ModularCube getItem(int id) {
         return mData.get(id);
     }
 
-    // allows clicks events to be caught
     public void setClickListener(ItemClickListener itemClickListener) {
         this.mClickListener = itemClickListener;
     }
 
-    // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick(View view, int position);
     }
